@@ -1,0 +1,33 @@
+\journaltitle{Bioinformatics}
+\DOI{DOI added during production}
+\copyrightyear{2026}
+\pubyear{2026}
+\vol{XX}
+\issue{x}
+\access{Published: Date added during production}
+\appnotes{Application Note}
+
+\firstpage{1}
+
+\title[RIsearch3]{RIsearch3: a Rust reimplementation of RIsearch with Python bindings and a modernised siRNA off-target pipeline}
+
+\author[1,$\ast$]{Lorenzo Favaro Puzza\ORCID{0000-0000-0000-0000}}
+% \author[1]{Co-Author Name}
+
+\address[1]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \postcode{Postcode}, \state{State}, \country{Country}}}
+
+\corresp[$\ast$]{Corresponding author. \href{mailto:lorenzofavaro.soa@gmail.com}{lorenzofavaro.soa@gmail.com}}
+
+\received{Date}{0}{Year}
+\revised{Date}{0}{Year}
+\accepted{Date}{0}{Year}
+
+\abstract{%
+\textbf{Motivation:} RNA--RNA interaction prediction underpins siRNA design and non-coding RNA analysis. RIsearch2 is a widely used tool but predates modern packaging and the Python data ecosystem, limiting integration into contemporary analysis pipelines.\\
+\textbf{Results:} We present RIsearch3, a Rust reimplementation of the RIsearch core with algorithmic refinements, a redesigned command-line interface, and Python bindings. We also rewrite the siRNA off-target pipeline in modern Python, using Polars for tabular processing and YAML for configuration; the pipeline doubles as a reference example of the Python bindings. Benchmarks show a 2--3$\times$ speedup on the core and substantially faster end-to-end pipeline runs.\\
+\textbf{Availability and implementation:} RIsearch3 is released under [LICENSE] at \href{https://github.com/}{GitHub URL}. The Rust binary installs via \texttt{cargo install risearch3}; the Python package is available on PyPI as \texttt{risearch3}.\\
+\textbf{Contact:} \href{mailto:lorenzofavaro.soa@gmail.com}{lorenzofavaro.soa@gmail.com}}
+
+\keywords{RNA-RNA interaction, siRNA off-target, Rust, Python bindings, bioinformatics tooling}
+
+\maketitle

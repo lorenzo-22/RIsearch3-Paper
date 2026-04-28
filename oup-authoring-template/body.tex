@@ -1,0 +1,44 @@
+\section{Introduction}
+
+% 1--2 short paragraphs:
+% - The RNA--RNA interaction prediction problem; why fast, accurate scanning matters
+%   (siRNA design, ncRNA target screens).
+% - RIsearch2 baseline (cite); identified pain points: install friction, monolithic CLI,
+%   no Python integration, off-target pipeline written against an older Python.
+% - One sentence stating the contribution: RIsearch3 — Rust core + Python bindings +
+%   modernised pipeline.
+
+\section{Implementation}
+
+\subsection{Rust core and algorithmic refinements}\label{subsec:core}
+
+% - Rust rewrite preserves RIsearch2 semantics; single static binary, cargo install.
+% - Brief note on algorithmic upgrades (mention but don't oversell — speedup is not the
+%   headline).
+% - Inline benchmark: small table or one sentence with numbers vs. RIsearch2 on a
+%   representative dataset. Reference Fig.~\ref{fig:core_benchmark}.
+
+\subsection{Command-line interface}\label{subsec:cli}
+
+% - Subcommand structure, sensible defaults, useful --help.
+% - One short usage example in a verbatim block.
+
+\subsection{Python bindings}\label{subsec:bindings}
+
+% - PyO3-based bindings; pip-installable wheel.
+% - Minimal Python snippet showing a query + result iteration.
+% - Sets up the off-target pipeline as the worked example.
+
+\subsection{siRNA off-target pipeline}\label{subsec:pipeline}
+
+% - Rewritten in modern Python; Polars for tabular ops.
+% - YAML configuration; single CLI entry point.
+% - Built on top of the Python bindings (Sec.~\ref{subsec:bindings}) — concrete
+%   demonstration of how downstream tools can consume RIsearch3.
+% - Inline benchmark: end-to-end runtime on a reference siRNA set vs. the
+%   RIsearch2-era pipeline. Reference Fig.~\ref{fig:pipeline_benchmark}.
+
+\section{Conclusion}
+
+% 1 short paragraph: what's available, who benefits, what's next (additional energy
+% models, further integration targets).
