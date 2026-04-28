@@ -26,7 +26,7 @@ counted as matches so that $G{-}U$ wobble pairs are admitted.
 The rewrite focuses on engineering rather than algorithmic change. Suffix-array
 construction is delegated to the \texttt{libsais} library, replacing the
 \texttt{libdivsufsort} library used by RIsearch2; an optional OpenMP build
-provides parallel index construction. Search is parallelised with Rayon
+provides parallel index construction. Search is parallelised with Rayon [citation needed]
 across seed groups, with each worker holding its own dynamic-programming
 context to avoid contention. The DP extension uses an X-drop early-termination
 heuristic, evaluates the energy model inline rather than through precomputed
