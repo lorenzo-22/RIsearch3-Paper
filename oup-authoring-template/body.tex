@@ -27,9 +27,9 @@ Python analysis requires shelling out to the binary and parsing text output.
 We present \textbf{RIsearch3}: a Rust reimplementation of the RIsearch2
 algorithm with parity-tested behaviour, a redesigned command-line interface,
 and PyO3 Python bindings that expose search results as native Polars
-DataFrames. Alongside the core we release a rewritten siRNA off-target
-pipeline (Typer CLI, OmegaConf YAML configuration, Polars throughout) that
-consumes the bindings directly and so doubles as a reference example for
+DataFrames. Alongside the core, we release a rewritten siRNA off-target
+pipeline that
+consumes the bindings directly and thus doubles as a reference example for
 users wishing to embed RIsearch3 in their own pipelines.
 
 \section{Implementation}
@@ -50,7 +50,7 @@ counted as matches so that $G{-}U$ wobble pairs are admitted.
 The rewrite focuses on engineering rather than algorithmic change. Suffix-array
 construction is delegated to the \texttt{libsais} library, replacing the
 \texttt{libdivsufsort} library used by RIsearch2; an optional OpenMP build
-provides parallel index construction. Search is parallelised with Rayon~\citep{rayon}
+provides parallel index construction. Search is parallelised with Rayon~\ep{rayon}
 across seed groups, with each worker holding its own dynamic-programming
 context to avoid contention. The DP extension uses an X-drop early-termination
 heuristic, evaluates the energy model inline rather than through precomputed
