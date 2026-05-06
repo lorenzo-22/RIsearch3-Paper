@@ -127,7 +127,7 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 % =============================================================
 \section{siRNA Off-Target Discovery Pipeline}\label{sec:pipeline}
 
-The siRNA off-target discovery pipeline is a full reimplementation of the
+The new siRNA off-target discovery pipeline is a full reimplementation of the
 workflow described in \citet{alkan2017risearch2}, ported from Python~2.7 to
 Python~3.14, restructured as a modular package, and accelerated through
 vectorised DataFrame operations and multi-core parallelism.
@@ -157,7 +157,7 @@ or BED) to retain sites overlapping expressed features and to assign
 position-specific abundance values. Intersection is performed in-memory using
 an NCLS interval index partitioned by chromosome and strand, with
 chromosome--strand pairs distributed across a thread pool; no external tools
-such as \texttt{bedtools} are required. In the third stage, hybridisation
+such as \texttt{bedtools} are required anymore. In the third stage, hybridisation
 energies are adjusted by binding-site opening energies pre-computed with
 RNAplfold (default window $W = 80$, maximum base-pairing span $L = 40$,
 matching the parameterisation of \citet{alkan2017risearch2}), and the
