@@ -173,14 +173,16 @@ in the same process with no intermediate files on disk. In the second stage,
 predicted binding sites are intersected with a transcriptome annotation (GTF
 or BED) to retain sites overlapping expressed features and to assign
 position-specific abundance values. Intersection is performed in-memory using
-an NCLS interval index partitioned by chromosome and strand, with
+an NCLS interval index~\citep{ncls} partitioned by chromosome and strand, with
 chromosome--strand pairs distributed across a thread pool; no external tools
-such as \texttt{bedtools} are required anymore. In the third stage, hybridisation
+such as \texttt{bedtools} are needed. In the third stage, hybridisation
 energies are adjusted by binding-site opening energies pre-computed using
 the RNAplfold algorithm via the ViennaRNA Python API (default window
 $W = 80$, maximum base-pairing span $L = 40$, and unpaired region length
-$u = 30$, matching the parameterisation of \citet{alkan2017risearch2}), and the
-partition function
+$u = 30$, matching the parameterisation of \citet{alkan2017risearch2}; these
+values capture the local secondary-structure context of typical siRNA binding
+sites while remaining computationally tractable for transcriptome-wide
+screens), and the Boltzmann-weighted sum
 %
 \begin{equation}
   Z = \sum_{i \in \mathcal{I}} A_i \, e^{-\beta (E'_i + O_i)}
@@ -189,10 +191,15 @@ partition function
 %
 \noindent is evaluated as a single vectorised \texttt{group\_by} aggregation
 in Polars, where $A_i$, $E'_i$, and $O_i$ denote the abundance, adjusted
-hybridisation energy, and opening energy of site $i$, as defined in
-\citet{alkan2017risearch2}. Per-transcript off-targeting probabilities
-$p_{\mathrm{off},j}$ and the aggregate off-targeting potential
-$P_{\mathrm{OFF}} = 1 - p_{\mathrm{on}}$ are then computed as column
+hybridisation energy, and opening energy of site $i$, and
+$\beta = 1/(k_\mathrm{B}T)$ at $T = 310.15$\,K ($37\,^\circ$C, the standard
+RNA-folding temperature), as defined in \citet{alkan2017risearch2}. The
+corresponding on-target sum $Z_{\mathrm{on}}$ is computed identically over the
+user-supplied on-target binding sites; the on-target probability
+$p_{\mathrm{on}} = Z_{\mathrm{on}} / (Z_{\mathrm{on}} + \sum_j Z_j)$, where
+the sum runs over all transcripts $j$, determines the aggregate off-targeting
+potential $P_{\mathrm{OFF}} = 1 - p_{\mathrm{on}}$. Per-transcript
+off-targeting probabilities $p_{\mathrm{off},j}$ are then computed as column
 operations on the resulting DataFrame. Parametric sweeps over $\alpha$,
 $\gamma$, and $\theta$ are resolved in a single aggregation pass rather than
 repeated sequential iterations. In the fourth stage, results are written
