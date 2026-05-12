@@ -129,13 +129,31 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 \begin{figure*}[ht]
 \centering
 \input{figures/workflow}
-\caption{Architecture of RIsearch3 and the siRNA off-target pipeline.
-Left to right: input sequences are indexed and searched by the Rust core;
-results are returned as a zero-copy Polars DataFrame via the Python bindings;
-the off-target pipeline consumes the DataFrame in-process through four
-stages---search, transcriptome intersection, accessibility correction, and
-partition-function aggregation---yielding per-transcript off-targeting
-probabilities $p_{\mathrm{off}}$ and the aggregate score $P_{\mathrm{OFF}}$.}
+\caption{%
+  \textbf{Architecture of RIsearch3 and the siRNA off-target discovery pipeline.}
+  Input siRNA sequences and target sequences pass through four service layers.
+  \textbf{Stage~1 (Search):} \texttt{RIsearchService} executes the RIsearch3
+  suffix-array seed-and-extend algorithm in-process via PyO3 Python bindings;
+  \texttt{RIsearchParser} converts results into a Polars DataFrame with no
+  intermediate files or subprocess invocations.
+  \textbf{Stage~2 (Intersection):} \texttt{IntersectionService} joins predicted
+  binding sites against a GTF/BED annotation by genomic coordinates
+  (genome-wide mode, \texttt{gw}) or transcript identifier
+  (transcriptome-wide mode, \texttt{tw}), assigning per-site expression
+  values $\mathrm{Expr}_i$.
+  \textbf{Stage~3 (Accessibility):} \texttt{GenomeAccessibilityService}
+  retrieves per-site RNA opening energies $O_i = -RT\ln p_i$ from
+  pre-computed per-chromosome Parquet profiles folded by the RNAplfold
+  algorithm (ViennaRNA~2.7.2; $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$.
+  \textbf{Stage~4 (Partition function):} \texttt{ProbabilityService} computes
+  Boltzmann weights $W_i = \mathrm{Expr}_i\,e^{-\Delta G_i^{\mathrm{tot}}/RT}$
+  where $\Delta G_i^{\mathrm{tot}} = \Delta G_i^{\mathrm{hyb}} + O_i$, and
+  evaluates per-siRNA partition functions $Z_s = \sum_i W_i$ via a single
+  Polars \texttt{group\_by} aggregation using the same temperature~$T$ as
+  Stage~3, ensuring thermodynamic consistency across both stages.
+  Per-site probabilities $P_{\mathrm{off},i} = W_i / Z_s$ and an optional
+  legacy \texttt{.results} summary are written to TSV, CSV, or Parquet.%
+}
 \label{fig:workflow}
 \end{figure*}
 
@@ -149,16 +167,28 @@ vectorised DataFrame operations and multi-core parallelism.
 \subsection*{Invocation and configuration}
 
 The pipeline exposes two subcommands: \texttt{off-targets}, which executes
-the core analysis, and \texttt{accessibility}, which pre-computes RNA
-binding-site opening-energy profiles using the RNAplfold algorithm via the
-ViennaRNA Python API~\citep{lorenz2011vienna}.
-All parameters---RIsearch energy threshold, seed specification, thermodynamic
-saturation parameters $\alpha$ and $\gamma$, accessibility window settings,
-and paths to query, transcriptome, and on-target files---are declared in a
-single YAML configuration file and validated at startup against a typed schema.
-YAML-driven configuration makes runs reproducible and shareable without
-relying on shell history. Individual subcommands may also be invoked
-independently to support staged workflows.
+the full analysis, and \texttt{accessibility}, which pre-computes per-site
+RNA opening-energy profiles from a genome or transcriptome FASTA using the
+RNAplfold algorithm (ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna};
+default $W{=}80$, $L{=}40$, $u{=}30$).
+Both subcommands accept a \texttt{-{}-temperature} parameter (default
+$37\,^\circ$C) that is propagated to all thermodynamic calculations: in
+\texttt{accessibility}, it sets the ViennaRNA model temperature
+(\texttt{md.temperature}), so that opening energies $O_i = -RT\ln p_i$ are
+computed at the specified condition; in \texttt{off-targets}, the same
+temperature determines the thermal energy $RT$ in the Boltzmann partition
+function.
+Sharing a single temperature across both stages ensures that hybridisation
+energies $\Delta G_i^{\mathrm{hyb}}$ from RIsearch and opening energies $O_i$
+from ViennaRNA are evaluated on a consistent thermodynamic scale before
+summation, directly replicating the intent of the original RIsearch
+model~\citep{wenzel2012risearch}.
+All remaining parameters---RIsearch energy threshold, seed specification,
+saturation parameters $\alpha$, $\gamma$, and $\theta$, and paths to query,
+transcriptome, and on-target files---are declared in a single YAML
+configuration file validated at startup against a typed OmegaConf schema.
+Individual subcommands may be invoked independently to support staged
+workflows.
 
 \subsection*{Pipeline stages}
 
@@ -175,31 +205,33 @@ or BED) to retain sites overlapping expressed features and to assign
 position-specific abundance values. Intersection is performed in-memory using
 an NCLS interval index~\citep{ncls} partitioned by chromosome and strand, with
 chromosome--strand pairs distributed across a thread pool; no external tools
-such as \texttt{bedtools} are needed. In the third stage, hybridisation
-energies are adjusted by binding-site opening energies pre-computed using
-the RNAplfold algorithm via the ViennaRNA Python API (default window
-$W = 80$, maximum base-pairing span $L = 40$, and unpaired region length
-$u = 30$, matching the parameterisation of \citet{alkan2017risearch2}; these
-values capture the local secondary-structure context of typical siRNA binding
-sites while remaining computationally tractable for transcriptome-wide
-screens), and the Boltzmann-weighted sum
+such as \texttt{bedtools} are needed. In the third stage, per-site binding-site opening energies $O_i = -RT\ln p_i$
+are retrieved from per-chromosome Parquet profiles pre-computed by the
+\texttt{accessibility} subcommand using the RNAplfold algorithm
+(ViennaRNA~2.7.2 Python API; $W{=}80$, $L{=}40$, $u{=}30$) at the same
+temperature used for the partition function, so that $\Delta G_i^{\mathrm{hyb}}$
+and $O_i$ are on a consistent thermodynamic scale; the Boltzmann-weighted sum
 %
 \begin{equation}
-  Z = \sum_{i \in \mathcal{I}} A_i \, e^{-\beta (E'_i + O_i)}
+  Z_s = \sum_{i \in \mathcal{I}_s}
+        \mathrm{Expr}_i \,
+        \exp\!\left(\frac{-\bigl(\Delta G_i^{\mathrm{hyb}} + O_i\bigr)}{RT}\right)
   \label{eq:partition}
 \end{equation}
 %
 \noindent is evaluated as a single vectorised \texttt{group\_by} aggregation
-in Polars, where $A_i$, $E'_i$, and $O_i$ denote the abundance, adjusted
-hybridisation energy, and opening energy of site $i$, and
-$\beta = 1/(k_\mathrm{B}T)$ at $T = 310.15$\,K ($37\,^\circ$C, the standard
-RNA-folding temperature), as defined in \citet{alkan2017risearch2}. The
-corresponding on-target sum $Z_{\mathrm{on}}$ is computed identically over the
-user-supplied on-target binding sites; the on-target probability
-$p_{\mathrm{on}} = Z_{\mathrm{on}} / (Z_{\mathrm{on}} + \sum_j Z_j)$, where
-the sum runs over all transcripts $j$, determines the aggregate off-targeting
-potential $P_{\mathrm{OFF}} = 1 - p_{\mathrm{on}}$. Per-transcript
-off-targeting probabilities $p_{\mathrm{off},j}$ are then computed as column
+in Polars, where $\mathrm{Expr}_i$ is the transcript expression level,
+$\Delta G_i^{\mathrm{hyb}}$ is the RIsearch hybridisation energy,
+$O_i = -RT\ln p_i$ is the opening energy derived from the RNAplfold unpaired
+probability $p_i$, $R = 1.987\times10^{-3}$\,kcal\,mol$^{-1}$\,K$^{-1}$ is
+the molar gas constant, and $T$ is the folding temperature (default
+$310.15$\,K, $37\,^\circ$C). When an on-target binding site is supplied via \texttt{-{}-on-target-ids},
+its Boltzmann weight $W_{\mathrm{on}}$ is computed identically and added to
+$Z_s$; the on-target probability
+$p_{\mathrm{on}} = W_{\mathrm{on}} / Z_s$
+determines the aggregate off-targeting potential
+$P_{\mathrm{OFF}} = 1 - p_{\mathrm{on}}$. Per-transcript
+off-targeting probabilities $p_{\mathrm{off},i} = W_i / Z_s$ are then computed as column
 operations on the resulting DataFrame. Parametric sweeps over $\alpha$,
 $\gamma$, and $\theta$ are resolved in a single aggregation pass rather than
 repeated sequential iterations. In the fourth stage, results are written

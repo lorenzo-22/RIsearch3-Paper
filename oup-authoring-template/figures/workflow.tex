@@ -1,5 +1,5 @@
 % RIsearch3 system workflow — TikZ source
-% Style: flat single-colour boxes (no rectangle split), reference-palette.
+% Four-stage pipeline matching RIsearch_pipeline service architecture.
 % \usetikzlibrary loaded in main.tex preamble.
 
 % ── Palette ──────────────────────────────────────────────────────────────────
@@ -11,131 +11,169 @@
 \definecolor{ParamBorder}{RGB}{110,110,110} % gray border
 \definecolor{OutOrange}{RGB}{244,177,131}   % orange      — output box
 \definecolor{OutBorder}{RGB}{190,100,30}    % orange border
+\definecolor{TempRed}{RGB}{255,220,210}     % pale red    — shared temperature param
+\definecolor{TempBorder}{RGB}{200,80,40}    % red border
 
 \begin{tikzpicture}[
   >=Stealth,
   font=\sffamily\small,
   node distance=0.6cm,
   % ── node styles ──────────────────────────────────────────────────────────
-  % Main component boxes — blue, rounded (like "Step N" boxes in reference)
   comp/.style={
     draw=StepBorder, fill=StepBlue,
     rounded corners=8pt,
-    minimum width=2.8cm, minimum height=1.6cm,
-    text width=2.6cm, align=center, inner sep=5pt,
+    minimum width=2.7cm, minimum height=1.6cm,
+    text width=2.5cm, align=center, inner sep=5pt,
   },
-  % Software / API call boxes — green, rounded (like fastQC/Salmon in reference)
   tool/.style={
     draw=ToolBorder, fill=ToolGreen,
     rounded corners=6pt,
-    minimum width=2.6cm, minimum height=0.7cm,
-    text width=2.4cm, align=center, inner sep=3pt,
+    minimum width=2.5cm, minimum height=0.7cm,
+    text width=2.3cm, align=center, inner sep=3pt,
     font=\sffamily\scriptsize,
   },
-  % Parameter / version boxes — gray, square (like "fastQC v.0.11.9" in reference)
   param/.style={
     draw=ParamBorder, fill=ParamGray,
-    minimum width=2.6cm, minimum height=0.6cm,
-    text width=2.4cm, align=center, inner sep=3pt,
+    minimum width=2.5cm, minimum height=0.6cm,
+    text width=2.3cm, align=center, inner sep=3pt,
     font=\sffamily\scriptsize,
   },
-  % Input box — gray, square
   inbox/.style={
     draw=ParamBorder, fill=ParamGray,
     minimum width=1.9cm, minimum height=1.6cm,
     text width=1.7cm, align=center, inner sep=4pt,
   },
-  % Output box — orange, square
   outbox/.style={
     draw=OutBorder, fill=OutOrange,
     minimum width=1.9cm, minimum height=1.6cm,
     text width=1.7cm, align=center, inner sep=4pt,
   },
-  % Arrows
+  tempbox/.style={
+    draw=TempBorder, fill=TempRed,
+    rounded corners=4pt,
+    minimum width=2.0cm, minimum height=0.6cm,
+    text width=1.8cm, align=center, inner sep=3pt,
+    font=\sffamily\scriptsize,
+  },
   marrow/.style={->, thick, draw=black!65},
   tarrow/.style={->, thin, draw=ToolBorder},
   parrow/.style={->, thin, draw=ParamBorder},
+  temparrow/.style={->, thin, dashed, draw=TempBorder},
 ]
 
-% ── MAIN ROW ─────────────────────────────────────────────────────────────────
+% ── INPUT ────────────────────────────────────────────────────────────────────
 
 \node[inbox] (input) {
-  Query siRNAs\\(FASTA)\\[4pt]
-  Target\\transcriptome\\(FASTA)
+  siRNA FASTA\\[2pt]
+  Target FASTA\\[2pt]
+  GTF\,/\,BED\\[2pt]
+  Acc.\ profiles
 };
 
-\node[comp, right=0.55cm of input] (core) {
-  \textbf{RIsearch3 Core}\\[3pt]
-  {\footnotesize\itshape Rust}
+% ── STAGE 1: Search ──────────────────────────────────────────────────────────
+
+\node[comp, right=0.55cm of input] (search) {
+  \textbf{Stage\,1}\\[2pt]
+  Search
 };
 
-\node[comp, right=0.55cm of core] (py) {
-  \textbf{Python Bindings}\\[3pt]
-  {\footnotesize\itshape PyO3\,$\cdot$\,Maturin}
+\node[tool, below=0.65cm of search] (t-search) {
+  \texttt{RIsearchService}\\[1pt]
+  \texttt{RIsearchParser}
 };
 
-\node[comp, right=0.55cm of py] (pipe) {
-  \textbf{Off-Target Pipeline}\\[3pt]
-  {\footnotesize\itshape Python\,$\cdot$\,Polars}
+\node[param, below=0.3cm of t-search] (p-search) {
+  PyO3 bindings\\Polars DataFrame
 };
 
-\node[outbox, right=0.55cm of pipe] (output) {
-  $p_{\mathrm{off}}$\\per transcript\\[4pt]
-  $P_{\mathrm{OFF}}$\\aggregate\\[4pt]
+% ── STAGE 2: Intersection ────────────────────────────────────────────────────
+
+\node[comp, right=0.55cm of search] (isect) {
+  \textbf{Stage\,2}\\[2pt]
+  Intersection
+};
+
+\node[tool, below=0.65cm of isect] (t-isect) {
+  \texttt{IntersectionService}\\[1pt]
+  \texttt{TranscriptomeParser}
+};
+
+\node[param, below=0.3cm of t-isect] (p-isect) {
+  NCLS interval index\\gw\,/\,tw mode
+};
+
+% ── STAGE 3: Accessibility ───────────────────────────────────────────────────
+
+\node[comp, right=0.55cm of isect] (acc) {
+  \textbf{Stage\,3}\\[2pt]
+  Accessibility
+};
+
+\node[tool, below=0.65cm of acc] (t-acc) {
+  \texttt{GenomeAccessibility}\\[-1pt]\texttt{Service}\\[1pt]
+  ViennaRNA\,2.7.2
+};
+
+\node[param, below=0.3cm of t-acc] (p-acc) {
+  $O_i = -RT\ln p_i$\\$W{=}80,\,L{=}40,\,u{=}30$
+};
+
+% ── STAGE 4: Partition function ──────────────────────────────────────────────
+
+\node[comp, right=0.55cm of acc] (prob) {
+  \textbf{Stage\,4}\\[2pt]
+  Partition\\Function
+};
+
+\node[tool, below=0.65cm of prob] (t-prob) {
+  \texttt{ProbabilityService}\\[1pt]
+  Polars \texttt{group\_by}
+};
+
+\node[param, below=0.3cm of t-prob] (p-prob) {
+  $W_i{=}\mathrm{Expr}_i\,e^{-\Delta G_i/RT}$\\$\alpha,\gamma,\theta$ sweeps
+};
+
+% ── OUTPUT ───────────────────────────────────────────────────────────────────
+
+\node[outbox, right=0.55cm of prob] (output) {
+  $p_{\mathrm{off},i}$\\per site\\[3pt]
+  $P_{\mathrm{OFF}}$\\aggregate\\[3pt]
   TSV\,$\cdot$\,CSV\\Parquet
 };
 
-% ── TOOL NODES — below each component ────────────────────────────────────────
+% ── SHARED TEMPERATURE PARAMETER ─────────────────────────────────────────────
 
-\node[tool, below=0.65cm of core] (t-core) {
-  \texttt{risearch index}\\[1pt]
-  \texttt{risearch search}
-};
-
-\node[tool, below=0.65cm of py] (t-py) {
-  \texttt{risearch.index()}\\[1pt]
-  \texttt{risearch.search()}
-};
-
-\node[tool, below=0.65cm of pipe] (t-pipe) {
-  \textbf{1.}~Search via bindings\\[1pt]
-  \textbf{2.}~Intersection (NCLS)\\[1pt]
-  \textbf{3.}~Accessibility\\[1pt]
-  \textbf{4.}~Partition function $Z$
-};
-
-% ── PARAM NODES — below tool nodes ───────────────────────────────────────────
-
-\node[param, below=0.3cm of t-core] (p-core) {
-  Suffix-array index\\t04\,/\,t99 energy params
-};
-
-\node[param, below=0.3cm of t-py] (p-py) {
-  Polars DataFrame\\Arrow\,C\,Stream (zero-copy)
-};
-
-\node[param, below=0.3cm of t-pipe] (p-pipe) {
-  ViennaRNA API\\$W$=80, $L$=40, $u$=30
+\node[tempbox, above=0.7cm of acc] (temp) {
+  \texttt{-{}-temperature}\\$T$ (default $37\,^\circ$C)
 };
 
 % ── MAIN FLOW ARROWS ─────────────────────────────────────────────────────────
 
-\draw[marrow] (input.east)  -- (core.west);
-\draw[marrow] (core.east)   -- (py.west);
-\draw[marrow] (py.east)     -- (pipe.west);
-\draw[marrow] (pipe.east)   -- (output.west);
+\draw[marrow] (input.east)  -- (search.west);
+\draw[marrow] (search.east) -- (isect.west);
+\draw[marrow] (isect.east)  -- (acc.west);
+\draw[marrow] (acc.east)    -- (prob.west);
+\draw[marrow] (prob.east)   -- (output.west);
 
-% ── TOOL → COMPONENT ARROWS ──────────────────────────────────────────────────
+% ── TOOL ↔ COMPONENT ARROWS ──────────────────────────────────────────────────
 
-\draw[tarrow] (t-core.north) -- (core.south);
-\draw[tarrow] (t-py.north)   -- (py.south);
-\draw[tarrow] (t-pipe.north) -- (pipe.south);
+\draw[tarrow] (t-search.north) -- (search.south);
+\draw[tarrow] (t-isect.north)  -- (isect.south);
+\draw[tarrow] (t-acc.north)    -- (acc.south);
+\draw[tarrow] (t-prob.north)   -- (prob.south);
 
 % ── PARAM → TOOL ARROWS ──────────────────────────────────────────────────────
 
-\draw[parrow] (p-core.north) -- (t-core.south);
-\draw[parrow] (p-py.north)   -- (t-py.south);
-\draw[parrow] (p-pipe.north) -- (t-pipe.south);
+\draw[parrow] (p-search.north) -- (t-search.south);
+\draw[parrow] (p-isect.north)  -- (t-isect.south);
+\draw[parrow] (p-acc.north)    -- (t-acc.south);
+\draw[parrow] (p-prob.north)   -- (t-prob.south);
+
+% ── TEMPERATURE → STAGE 3 and STAGE 4 ────────────────────────────────────────
+
+\draw[temparrow] (temp.west)  -| (acc.north);
+\draw[temparrow] (temp.east)  -| (prob.north);
 
 % ── LEGEND ───────────────────────────────────────────────────────────────────
 
@@ -147,21 +185,21 @@
 \node[comp, minimum width=0.8cm, minimum height=0.45cm,
       text width=0.6cm, inner sep=2pt, font=\tiny,
       right=2.5cm of li, anchor=west] (lc) {};
-\node[right=0.1cm of lc, font=\sffamily\tiny, anchor=west] {Component};
+\node[right=0.1cm of lc, font=\sffamily\tiny, anchor=west] {Stage};
 
 \node[tool, minimum width=0.8cm, minimum height=0.45cm,
       text width=0.6cm, inner sep=2pt, font=\tiny,
-      right=5.2cm of li, anchor=west] (lt) {};
-\node[right=0.1cm of lt, font=\sffamily\tiny, anchor=west] {Software\,/\,API};
+      right=4.8cm of li, anchor=west] (lt) {};
+\node[right=0.1cm of lt, font=\sffamily\tiny, anchor=west] {Service\,/\,API};
 
 \node[param, minimum width=0.8cm, minimum height=0.45cm,
       text width=0.6cm, inner sep=2pt, font=\tiny,
-      right=8.0cm of li, anchor=west] (lp) {};
+      right=7.5cm of li, anchor=west] (lp) {};
 \node[right=0.1cm of lp, font=\sffamily\tiny, anchor=west] {Parameters};
 
-\node[outbox, minimum width=0.8cm, minimum height=0.45cm,
+\node[tempbox, minimum width=0.8cm, minimum height=0.45cm,
       text width=0.6cm, inner sep=2pt, font=\tiny,
-      right=11.0cm of li, anchor=west] (lo) {};
-\node[right=0.1cm of lo, font=\sffamily\tiny, anchor=west] {Output data};
+      right=10.2cm of li, anchor=west] (ltmp) {};
+\node[right=0.1cm of ltmp, font=\sffamily\tiny, anchor=west] {Shared $T$};
 
 \end{tikzpicture}
