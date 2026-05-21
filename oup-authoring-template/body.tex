@@ -249,14 +249,17 @@ transcriptome copy regardless of worker count. Prediction files are parsed
 lazily so that only filtered, selected columns are materialised; output is
 streamed to disk incrementally throughout a batch run.
 
-Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) against the human
-transcriptome (hg38), the pipeline completes the intersection, probability,
-and output stages $7{-}9\times$ faster than the legacy implementation across
-batch sizes of 500--2{,}000 siRNAs (five runs each;
-Supplementary Figure~S1). Peak memory across all workers plateaus at
-approximately 7\,GB in the new pipeline regardless of batch size, whereas the
-legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size
-increases.
+Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of
+the genome-wide siRNA efficacy library of \citet{huesken2005design} searched
+against the repeat-masked GRCh38/hg38 reference genome and intersected against
+an H1299 RNA-seq expression profile (Supplementary Methods), the pipeline
+completes the intersection, accessibility annotation, probability computation,
+and output stages $7{-}9\times$ faster than the legacy Python~2.7
+implementation across batch sizes of 500--2{,}000 siRNAs (five randomised
+trials per batch size; Supplementary Figure~S1). Peak memory across all
+workers plateaus at approximately 7\,GB in the new pipeline regardless of
+batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to
+$\sim$10\,GB as batch size increases.
 
 % =============================================================
 %  CONCLUSION
