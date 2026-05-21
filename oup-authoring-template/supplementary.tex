@@ -166,6 +166,78 @@ the partition-function stage.
 At benchmark time, accessibility profiles were pre-computed and stored;
 loading from Parquet is included in the benchmarked wall-clock time.
 
+\subsection*{H1299 expression annotation}
+
+Per-transcript expression weights for the H1299 (NCI-H1299, large-cell lung
+carcinoma) cell line were derived from the RNA-seq dataset E-MTAB-2770
+(\textit{RNA-Seq of 675 human cancer cell lines}, CCLE), which is archived at
+ArrayExpress and contains data for approximately 675 cancer cell lines.
+
+\paragraph{Sample identification.}
+The SDRF file was queried to identify the single H1299 paired-end run,
+yielding accession \texttt{SRR8615898}
+(R1: 4.7\,GB; R2: 4.8\,GB).
+
+\paragraph{Reference genome and annotation.}
+GENCODE~v47 was used as the reference (GRCh38 coordinate space):
+\texttt{gencode.v47.transcripts.fa.gz} for Salmon index construction and
+\texttt{gencode.v47.annotation.gtf.gz} for transcript coordinates.
+
+\paragraph{Quantification.}
+A Salmon~v1.10.3 quasi-mapping index was built from the GENCODE transcript
+sequences with the \texttt{-{}-gencode} flag (strips pipe-delimited header
+fields so transcript IDs match the GTF).
+Paired-end reads were quantified with:
+
+\begin{verbatim}
+salmon quant \
+    -i input/salmon_index \
+    -l A \
+    -1 SRR8615898_1.fastq.gz \
+    -2 SRR8615898_2.fastq.gz \
+    -p 16 \
+    --validateMappings \
+    --gcBias \
+    -o input/quant/SRR8615898
+\end{verbatim}
+
+\noindent Key flags: \texttt{-l~A} auto-detects library strandedness;
+\texttt{-{}-validateMappings} applies alignment scoring to filter spurious
+mappings; \texttt{-{}-gcBias} corrects for GC-content bias.
+The run achieved an 87.6\% mapping rate.
+
+\paragraph{BED7 construction.}
+Salmon output (\texttt{quant.sf}, 384{,}354 transcript rows) was merged with
+GTF transcript-level coordinates using a custom script (\texttt{make\_bed7.py}).
+Each GTF \texttt{transcript} record was converted to 0-based BED coordinates
+(BED start $=$ GTF start $- 1$; end unchanged) and joined to its TPM value
+by versioned ENST identifier.
+Transcripts absent from the Salmon output (PAR-locus duplicates and assembly
+patches) received TPM $= 0$.
+The output file (\texttt{annotation\_E-MTAB-2770\_GRCh38\_v47.bed}) is a
+tab-separated BED7 file (385{,}659 rows; no header) in which column~7 carries
+the per-transcript TPM as a floating-point value:
+
+\begin{center}
+\small
+\begin{tabular}{lllllll}
+\hline
+chrom & start & end & transcript\_id & . & strand & TPM \\
+\hline
+chr12 & 6534516 & 6538371 & ENST00000229239.10 & . & + & 6130.06 \\
+\hline
+\end{tabular}
+\end{center}
+
+Of the 385{,}659 transcripts, 143{,}881 (37.3\%) carried TPM $> 0$,
+consistent with the fraction of GENCODE transcripts detectably expressed in
+a single cell-line condition.
+Transcripts with TPM $= 0$ are retained in the file because the intersection
+service reads the annotation as a single indexed structure; dropping unexpressed
+entries would misalign row offsets.
+The high GAPDH TPM (ENST00000229239.10: 6{,}130) confirms biologically
+plausible quantification.
+
 \subsection*{Benchmark protocol}
 
 Timing and peak-memory measurements were collected on a server equipped
