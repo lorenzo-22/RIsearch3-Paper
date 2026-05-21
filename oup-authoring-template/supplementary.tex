@@ -64,7 +64,14 @@ read counts and stored in BED format.
 \subsection*{Genome indexing and RIsearch2 binding-site search}
 
 The repeat-masked hg38 reference genome was indexed with RIsearch2 to
-produce a suffix-array package file (\texttt{hg38\_masked.pksuf}).
+produce a suffix-array package file (\texttt{hg38\_masked.pksuf}):
+
+\begin{verbatim}
+risearch2.x -c hg38_masked.fa -o hg38_masked.pksuf
+\end{verbatim}
+
+\noindent where \texttt{-c} specifies the target FASTA to index and
+\texttt{-o} names the output suffix-array package.
 Binding-site predictions for each siRNA were generated once and stored
 as compressed output files; this search step was excluded from all
 pipeline benchmark timings so that only the post-search processing
