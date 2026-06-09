@@ -208,9 +208,7 @@ chromosome--strand pairs distributed across a thread pool; no external tools
 such as \texttt{bedtools} are needed. In the third stage, per-site binding-site opening energies $O_i = -RT\ln p_i$
 are retrieved from per-chromosome Parquet profiles pre-computed by the
 \texttt{accessibility} subcommand using the RNAplfold algorithm
-(ViennaRNA~2.7.2 Python API; $W{=}80$, $L{=}40$, $u{=}30$) at the same
-temperature used for the partition function, so that $\Delta G_i^{\mathrm{hyb}}$
-and $O_i$ are on a consistent thermodynamic scale; the Boltzmann-weighted sum
+; the Boltzmann-weighted sum
 %
 \begin{equation}
   Z_s = \sum_{i \in \mathcal{I}_s}
