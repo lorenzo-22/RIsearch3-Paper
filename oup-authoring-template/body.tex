@@ -131,25 +131,26 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 \input{figures/workflow}
 \caption{%
   \textbf{Architecture of RIsearch3 and the siRNA off-target discovery pipeline.}
-  Input siRNA sequences and target sequences pass through four service layers.
-  \textbf{Stage~1 (Search):} \texttt{RIsearchService} executes the RIsearch3
-  suffix-array seed-and-extend algorithm in-process via PyO3 Python bindings;
-  \texttt{RIsearchParser} converts results into a Polars DataFrame with no
-  intermediate files or subprocess invocations.
-  \textbf{Stage~2 (Intersection):} \texttt{IntersectionService} joins predicted
-  binding sites against a GTF/BED annotation by genomic coordinates
-  (genome-wide mode, \texttt{gw}) or transcript identifier
-  (transcriptome-wide mode, \texttt{tw}), assigning per-site expression
-  values $A_i$.
+  \textbf{Stage~1 (RIsearch):} \texttt{risearch.index()} builds the
+  suffix-array index from the target FASTA; \texttt{risearch.search()} queries
+  it with siRNA sequences via PyO3 Python bindings, returning results as a
+  Polars DataFrame with no intermediate files.
+  \textbf{Stage~2 (Intersection):} \texttt{IntersectionService} joins
+  predicted binding sites against a GTF/BED annotation by genomic coordinates
+  (genome-wide, \texttt{gw}) or transcript identifier
+  (transcriptome-wide, \texttt{tw}), assigning per-site expression values $A_i$;
+  the annotation is memory-mapped via Arrow IPC across all workers.
   \textbf{Stage~3 (Accessibility):} \texttt{GenomeAccessibilityService}
-  retrieves per-site RNA opening energies $O_i = -RT\ln p_i$ from
-  pre-computed per-chromosome Parquet profiles folded by the RNAplfold
-  algorithm (ViennaRNA~2.7.2; $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$.
+  computes per-site RNA opening energies $O_i = -RT\ln p_i$ from the
+  genome FASTA using the RNAplfold algorithm (ViennaRNA~2.7.2;
+  $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$.
   \textbf{Stage~4 (Partition function):} \texttt{ProbabilityService} computes
-  Boltzmann weights $W_i = A_i\,e^{-(E^\prime_i + O_i)/RT}$, and
-  evaluates per-siRNA partition functions $Z_s = \sum_i W_i$ via a single
-  Polars \texttt{group\_by} aggregation using the same temperature~$T$ as
-  Stage~3, ensuring thermodynamic consistency across both stages.
+  Boltzmann weights $W_i = A_i\,e^{-(E^\prime_i + O_i)/RT}$ and evaluates
+  per-siRNA partition functions $Z_s = \sum_i W_i$ via a single Polars
+  \texttt{group\_by} aggregation.
+  The \texttt{-{}-temperature} parameter (dashed red arrows) is shared between
+  Stage~3 and Stage~4, ensuring $E^\prime_i$ and $O_i$ are on a consistent
+  thermodynamic scale.
   Per-site probabilities $P_{\mathrm{off},i} = W_i / Z_s$ and an optional
   legacy \texttt{.results} summary are written to TSV, CSV, or Parquet.%
 }
