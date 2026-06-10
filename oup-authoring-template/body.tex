@@ -140,14 +140,13 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
   binding sites against a GTF/BED annotation by genomic coordinates
   (genome-wide mode, \texttt{gw}) or transcript identifier
   (transcriptome-wide mode, \texttt{tw}), assigning per-site expression
-  values $\mathrm{Expr}_i$.
+  values $A_i$.
   \textbf{Stage~3 (Accessibility):} \texttt{GenomeAccessibilityService}
   retrieves per-site RNA opening energies $O_i = -RT\ln p_i$ from
   pre-computed per-chromosome Parquet profiles folded by the RNAplfold
   algorithm (ViennaRNA~2.7.2; $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$.
   \textbf{Stage~4 (Partition function):} \texttt{ProbabilityService} computes
-  Boltzmann weights $W_i = \mathrm{Expr}_i\,e^{-\Delta G_i^{\mathrm{tot}}/RT}$
-  where $\Delta G_i^{\mathrm{tot}} = \Delta G_i^{\mathrm{hyb}} + O_i$, and
+  Boltzmann weights $W_i = A_i\,e^{-(E^\prime_i + O_i)/RT}$, and
   evaluates per-siRNA partition functions $Z_s = \sum_i W_i$ via a single
   Polars \texttt{group\_by} aggregation using the same temperature~$T$ as
   Stage~3, ensuring thermodynamic consistency across both stages.
@@ -179,7 +178,7 @@ computed at the specified condition; in \texttt{off-targets}, the same
 temperature determines the thermal energy $RT$ in the Boltzmann partition
 function.
 Sharing a single temperature across both stages ensures that hybridisation
-energies $\Delta G_i^{\mathrm{hyb}}$ from RIsearch and opening energies $O_i$
+energies $E^\prime_i$ from RIsearch and opening energies $O_i$
 from ViennaRNA are evaluated on a consistent thermodynamic scale before
 summation, directly replicating the intent of the original RIsearch
 model~\citep{wenzel2012risearch}.
@@ -208,18 +207,20 @@ chromosome--strand pairs distributed across a thread pool; no external tools
 such as \texttt{bedtools} are needed. In the third stage, per-site binding-site opening energies $O_i = -RT\ln p_i$
 are retrieved from per-chromosome Parquet profiles pre-computed by the
 \texttt{accessibility} subcommand using the RNAplfold algorithm
-; the Boltzmann-weighted sum
+(ViennaRNA~2.7.2 Python API; $W{=}80$, $L{=}40$, $u{=}30$) at the same
+temperature used for the partition function, so that $E^\prime_i$
+and $O_i$ are on a consistent thermodynamic scale; the Boltzmann-weighted sum
 %
 \begin{equation}
   Z_s = \sum_{i \in \mathcal{I}_s}
-        \mathrm{Expr}_i \,
-        \exp\!\left(\frac{-\bigl(\Delta G_i^{\mathrm{hyb}} + O_i\bigr)}{RT}\right)
+        A_i \,
+        \exp\!\left(\frac{-\bigl(E^\prime_i + O_i\bigr)}{RT}\right)
   \label{eq:partition}
 \end{equation}
 %
 \noindent is evaluated as a single vectorised \texttt{group\_by} aggregation
-in Polars, where $\mathrm{Expr}_i$ is the transcript expression level,
-$\Delta G_i^{\mathrm{hyb}}$ is the RIsearch hybridisation energy,
+in Polars, where $A_i$ is the transcript expression level,
+$E^\prime_i$ is the RIsearch hybridisation energy,
 $O_i = -RT\ln p_i$ is the opening energy derived from the RNAplfold unpaired
 probability $p_i$, $R = 1.987\times10^{-3}$\,kcal\,mol$^{-1}$\,K$^{-1}$ is
 the molar gas constant, and $T$ is the folding temperature (default
