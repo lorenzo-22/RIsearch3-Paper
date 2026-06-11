@@ -1,0 +1,273 @@
+% =============================================================
+%  SUPPLEMENTARY MATERIAL
+% =============================================================
+\clearpage
+\setcounter{figure}{0}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{section}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\section*{Supplementary Data}
+
+% ----- Figure S1 -----
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\caption{%
+  \textbf{Wall-clock time and peak memory of the new versus legacy pipeline
+  across batch sizes.}
+  Each box spans the interquartile range of five independent randomised trials;
+  the central line marks the median; whiskers extend to the full range.
+  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
+  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
+  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
+  library~\citep{huesken2005design}.
+  The new pipeline achieves a $7{-}9\times$ speed-up relative to the legacy
+  Python~2.7 implementation.
+  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
+  by \texttt{/usr/bin/time -v}.
+  The new pipeline plateaus at $\approx$7\,GB regardless of batch size;
+  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
+  size increases.
+  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
+  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
+  predictions were provided as input so that search time is excluded from
+  both measurements (see Supplementary Methods).%
+}
+\label{fig:S1}
+\end{figure*}
+
+% =============================================================
+%  SUPPLEMENTARY METHODS
+% =============================================================
+\section*{Supplementary Methods}
+
+\subsection*{Benchmark dataset}
+
+The benchmark uses a subset of the genome-wide siRNA efficacy library of
+\citet{huesken2005design}, which comprises 2{,}431 chemically synthesised
+21-mer siRNAs targeting 34 human genes, with experimentally measured
+knockdown efficacies obtained in the H1299 non-small-cell lung carcinoma
+cell line.
+A master set of 2{,}000 siRNAs was drawn by uniform random sampling (without
+replacement) from this library; smaller batch sizes of 1{,}000 and 500 were
+produced by further subsampling from this master set, with a fresh random
+draw for each of the five independent benchmark iterations.
+Target sequences for the off-target search were derived from the
+GRCh38/hg38 reference genome (UCSC assembly, December 2013) after
+RepeatMasker soft-masking of interspersed repeats and low-complexity
+regions (see below).
+Expression values were taken from an H1299 RNA-seq experiment
+(ArrayExpress accession E-MTAB-2770), converted to per-transcript
+read counts and stored in BED format.
+
+\subsection*{Genome indexing and RIsearch2 binding-site search}
+
+The repeat-masked hg38 reference genome was indexed with RIsearch2 to
+produce a suffix-array package file (\texttt{hg38\_masked.pksuf}):
+
+\begin{verbatim}
+risearch2.x -c hg38_masked.fa -o hg38_masked.pksuf
+\end{verbatim}
+
+\noindent where \texttt{-c} specifies the target FASTA to index and
+\texttt{-o} names the output suffix-array package.
+Binding-site predictions for each siRNA were generated once and stored
+as compressed output files; this search step was excluded from all
+pipeline benchmark timings so that only the post-search processing
+stages (intersection, accessibility annotation, partition function, and
+output) are measured.
+
+The search command used was:
+
+\begin{verbatim}
+risearch2.x \
+    -i hg38_masked.pksuf \
+    -q huesken_sirnas.fa \
+    -s 2:7 \
+    -e -10 \
+    -p2 \
+    -l 25 \
+    -t 32
+\end{verbatim}
+
+\noindent Key flag meanings:
+\begin{itemize}
+  \item \texttt{-i hg38\_masked.pksuf} — pre-built suffix-array index of the
+    repeat-masked hg38 target.
+  \item \texttt{-q huesken\_on\_subset.fa} — FASTA file of siRNA query
+    sequences (guide strand, 5$'$$\to$3$'$).
+  \item \texttt{-s 2:7} — restrict seed matches to guide-strand positions
+    2–7 (the canonical seed region for RISC-mediated target recognition).
+  \item \texttt{-e -10} — energy threshold of $-10$\,kcal\,mol$^{-1}$;
+    candidate sites with a hybridisation energy above this value are
+    discarded.
+  \item \texttt{-p2} — bindingsite output format, reporting one line per
+    predicted interaction with genomic coordinates, energies, and alignment.
+  \item \texttt{-l 25} — minimum alignment length of 25\,nt, filtering
+    out truncated partial matches at sequence boundaries.
+  \item \texttt{-t 32} — use 32 parallel threads for the search.
+  \item \texttt{--verbose} — write progress information to standard error.
+\end{itemize}
+
+\subsection*{Repeat-masking of the reference genome}
+
+Interspersed repeats and low-complexity DNA in hg38 were identified with
+RepeatMasker~4.x using the human-specific repeat library from Dfam.
+Soft-masking (lowercase bases) was applied, and RIsearch2 was configured
+to ignore masked positions during index construction and search.
+Masking is essential for genome-wide siRNA off-target screening: repetitive
+elements such as SINEs, LINEs, and simple repeats would otherwise generate
+an overwhelming number of spurious near-complementary hits that neither
+reflect genuine RISC-mediated silencing nor correspond to expressed loci,
+inflating $Z_s$ and suppressing meaningful off-target probability estimates.
+
+\subsection*{Accessibility pre-computation: legacy pipeline}
+
+The legacy pipeline computed per-nucleotide RNA opening energies using the
+Python~2.7 script \texttt{long\_RNAplfold\_openen.py}, which wraps the
+command-line tool \texttt{RNAplfold} (ViennaRNA~2.6.3) as a subprocess.
+Each chromosome FASTA was processed in chunks of 100{,}000\,nt, with a
+$2W$ ($= 160$\,nt) overlap between consecutive chunks to avoid edge
+artefacts in the window-based folding.
+The call issued per chunk was:
+
+\begin{verbatim}
+RNAplfold -W 80 -L 40 -u 30 -O < chunk.fa
+\end{verbatim}
+
+\noindent where \texttt{-W~80} sets the maximum base-pair span (window size),
+\texttt{-L~40} limits the maximum loop length, \texttt{-u~30} requests
+unpaired-probability profiles for windows up to length~30, and \texttt{-O}
+writes the profile to a file (\texttt{<seqname>\_openen}).
+The per-position, per-window-length unpaired probabilities were quantised
+to unsigned 8-bit integers by multiplying by 10 and clamping to
+$[0, 255]$, then concatenated into a flat binary file
+(\texttt{chr\emph{N}.open.acc.bin}) for the forward strand and a separate
+file (\texttt{chr\emph{N}.open.rev.acc.bin}) for the reverse-complement
+strand.
+Forward and reverse profiles for all canonical chromosomes
+(\texttt{chr\{1--22,X,Y,M\}}) were computed in parallel using
+GNU~\texttt{parallel} with 16 concurrent jobs.
+The legacy pipeline's \texttt{pipeline.py} looked up the appropriate bin
+file at run time, seeking to the byte offset corresponding to the genomic
+position of each predicted binding site.
+
+\subsection*{Accessibility pre-computation: new pipeline}
+
+The new pipeline's \texttt{accessibility} subcommand replicates the same
+folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) using the ViennaRNA~2.7.2
+Python API directly, without spawning subprocesses or writing intermediate
+plain-text files.
+For each chromosome, the API call \texttt{RNA.fold\_compound(...).probs\_window(...)}
+returns per-position unpaired-probability vectors at the specified temperature
+(default 37\,$^\circ$C, configurable via \texttt{-{}-temperature}).
+Opening energies are computed in-process as
+$O_i = -RT\ln p_i$,
+where $R = 1.987\times10^{-3}$\,kcal\,mol$^{-1}$\,K$^{-1}$ is the molar
+gas constant and $T$ is the folding temperature in kelvin.
+Results are written as per-chromosome Apache Parquet files, enabling
+columnar compression and zero-copy reads via the Arrow memory model during
+the partition-function stage.
+At benchmark time, accessibility profiles were pre-computed and stored;
+loading from Parquet is included in the benchmarked wall-clock time.
+
+\subsection*{H1299 expression annotation}
+
+Per-transcript expression weights for the H1299 (NCI-H1299, large-cell lung
+carcinoma) cell line were derived from the RNA-seq dataset E-MTAB-2770
+(\textit{RNA-Seq of 675 human cancer cell lines}, CCLE), which is archived at
+ArrayExpress and contains data for approximately 675 cancer cell lines.
+
+\paragraph{Sample identification.}
+The SDRF file was queried to identify the single H1299 paired-end run,
+yielding accession \texttt{SRR8615898}
+(R1: 4.7\,GB; R2: 4.8\,GB).
+
+\paragraph{Reference genome and annotation.}
+GENCODE~v47 was used as the reference (GRCh38 coordinate space):
+\texttt{gencode.v47.transcripts.fa.gz} for Salmon index construction and
+\texttt{gencode.v47.annotation.gtf.gz} for transcript coordinates.
+
+\paragraph{Quantification.}
+A Salmon~v1.10.3 quasi-mapping index was built from the GENCODE transcript
+sequences with the \texttt{-{}-gencode} flag (strips pipe-delimited header
+fields so transcript IDs match the GTF).
+Paired-end reads were quantified with:
+
+\begin{verbatim}
+salmon quant \
+    -i input/salmon_index \
+    -l A \
+    -1 SRR8615898_1.fastq.gz \
+    -2 SRR8615898_2.fastq.gz \
+    -p 16 \
+    --validateMappings \
+    --gcBias \
+    -o input/quant/SRR8615898
+\end{verbatim}
+
+\noindent Key flags: \texttt{-l~A} auto-detects library strandedness;
+\texttt{-{}-validateMappings} applies alignment scoring to filter spurious
+mappings; \texttt{-{}-gcBias} corrects for GC-content bias.
+The run achieved an 87.6\% mapping rate.
+
+\paragraph{BED7 construction.}
+Salmon output (\texttt{quant.sf}, 384{,}354 transcript rows) was merged with
+GTF transcript-level coordinates using a custom script (\texttt{make\_bed7.py}).
+Each GTF \texttt{transcript} record was converted to 0-based BED coordinates
+(BED start $=$ GTF start $- 1$; end unchanged) and joined to its TPM value
+by versioned ENST identifier.
+Transcripts absent from the Salmon output (PAR-locus duplicates and assembly
+patches) received TPM $= 0$.
+The output file (\texttt{annotation\_E-MTAB-2770\_GRCh38\_v47.bed}) is a
+tab-separated BED7 file (385{,}659 rows; no header) in which column~7 carries
+the per-transcript TPM as a floating-point value:
+
+\begin{center}
+\small
+\begin{tabular}{lllllll}
+\hline
+chrom & start & end & transcript\_id & . & strand & TPM \\
+\hline
+chr12 & 6534516 & 6538371 & ENST00000229239.10 & . & + & 6130.06 \\
+\hline
+\end{tabular}
+\end{center}
+
+Of the 385{,}659 transcripts, 143{,}881 (37.3\%) carried TPM $> 0$,
+consistent with the fraction of GENCODE transcripts detectably expressed in
+a single cell-line condition.
+Transcripts with TPM $= 0$ are retained in the file because the intersection
+service reads the annotation as a single indexed structure; dropping unexpressed
+entries would misalign row offsets.
+The high GAPDH TPM (ENST00000229239.10: 6{,}130) confirms biologically
+plausible quantification.
+
+\subsection*{Benchmark protocol}
+
+Timing and peak-memory measurements were collected on a server equipped
+with an AMD EPYC~9554 processor (64 physical cores, 128 threads) and
+sufficient RAM to keep all input files resident.
+Both pipelines used 32 parallel workers (\texttt{-j~32} for GNU parallel
+in the legacy case; \texttt{-j~32} process-pool workers for the new
+pipeline).
+
+For each combination of pipeline version (new / legacy) and batch size
+(500, 1{,}000, 2{,}000 siRNAs), the following procedure was applied:
+(i)~one warmup run was executed and discarded to populate OS page-cache
+entries and JIT any Python bytecode; (ii)~five timed runs were executed,
+each with a fresh output directory to avoid I/O caching effects.
+Wall-clock time and peak resident-set size (RSS) of the parent process
+were recorded with \texttt{/usr/bin/time -v} (GNU~time).
+Because both pipelines use fork-based child processes, the RSS reported
+reflects only the parent; aggregate memory across all 32 workers will
+exceed this figure.
+
+For batch sizes of 1{,}000 and 500, each of the five timed runs used an
+independently drawn random subset of the master 2{,}000-siRNA set,
+ensuring that variance estimates reflect genuine sampling variability
+rather than run-to-run measurement noise alone.
+Pre-computed RIsearch2 binding-site prediction files were provided as
+input to both pipelines, so that search time is excluded from all
+measurements.

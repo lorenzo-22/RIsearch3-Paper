@@ -1,3 +1,6 @@
+% =============================================================
+%  INTRODUCTION
+% =============================================================
 \section{Introduction}
 
 Intermolecular RNA--RNA interactions underpin a wide range of regulatory
@@ -17,12 +20,11 @@ binding probabilities and a transcriptome-wide off-targeting potential
 through a partition-function model that integrates transcript abundance and
 binding-site accessibility.
 
-Almost a decade later, the algorithm remains competitive, but the surrounding
-software has aged less well. RIsearch2 is distributed as a C source tarball
-with a custom Makefile and is increasingly awkward to install on modern
-systems; the off-target pipeline is written in Python~2.7, long past end of
-life. Neither component exposes a library API, so embedding RIsearch2 in a
-Python analysis requires shelling out to the binary and parsing text output.
+Despite the algorithm's continued relevance, the software ecosystem has aged
+less well: RIsearch2 ships as a C source tarball with a custom Makefile; the
+off-target pipeline is written in Python~2.7, long past end of life; and
+neither component exposes a library API suitable for embedding in modern
+Python-native analyses.
 
 We present \textbf{RIsearch3}: a Rust reimplementation of the RIsearch2
 algorithm with parity-tested behaviour, a redesigned command-line interface,
@@ -32,9 +34,31 @@ pipeline that
 consumes the bindings directly and thus doubles as a reference example for
 users wishing to embed RIsearch3 in their own pipelines.
 
-\section{Implementation}
+% =============================================================
+%  RATIONALE FOR A RUST REIMPLEMENTATION
+% =============================================================
+\section{Rationale for a Rust Reimplementation}\label{sec:rationale}
 
-\subsection{Rust core}\label{subsec:core}
+Updating the existing C codebase would have resolved installation friction
+but not the absence of a library API or the Python~2.7 dependency. Rust was
+chosen because it addresses all three limitations simultaneously.
+
+A \texttt{cargo build -{}-release} produces a statically-linked binary with no
+runtime dependencies, solving the Makefile-and-tarball distribution problem.
+Rust's ownership model eliminates memory-safety defects without a garbage
+collector, preserving the predictable, low-latency performance expected of a
+bioinformatics search kernel. The PyO3 framework provides first-class Python
+interoperability without writing C extension modules; combined with Maturin,
+it enables compiled platform wheels distributed via PyPI, so the Python API
+is available through a standard \texttt{pip install}. Rust's strong type
+system made the reimplementation tractable: the compiler enforces invariants
+that would otherwise require extensive runtime testing, reducing the risk of
+introducing silent numerical discrepancies relative to the original C code.
+
+% =============================================================
+%  RISEARCH3 CORE IMPLEMENTATION
+% =============================================================
+\section{RIsearch3 Core Implementation}\label{sec:core}
 
 RIsearch3 reimplements the suffix-array seed-and-extend algorithm of
 RIsearch2~\citep{alkan2017risearch2} in Rust. The two-stage scheme is
@@ -50,15 +74,16 @@ counted as matches so that $G{-}U$ wobble pairs are admitted.
 The rewrite focuses on engineering rather than algorithmic change. Suffix-array
 construction is delegated to the \texttt{libsais} library, replacing the
 \texttt{libdivsufsort} library used by RIsearch2; an optional OpenMP build
-provides parallel index construction. Search is parallelised with Rayon~\ep{rayon}
-across seed groups, with each worker holding its own dynamic-programming
-context to avoid contention. The DP extension uses an X-drop early-termination
-heuristic, evaluates the energy model inline rather than through precomputed
-lookup tables, and represents the forward and reverse strands through Rust
-const generics so that the compiler specialises both code paths separately.
-The crate uses the jemalloc allocator. Both energy parameter sets supported
-by RIsearch2 (\texttt{t04} and \texttt{t99}, derived from the Turner
-nearest-neighbour parameters) are retained.
+provides parallel index construction. Search is parallelised with
+Rayon~\citep{rayon} across seed groups, with each worker holding its own
+dynamic-programming context to avoid contention. The DP extension uses an
+X-drop early-termination heuristic, evaluates the energy model inline rather
+than through precomputed lookup tables, and represents the forward and reverse
+strands through Rust const generics so that the compiler specialises both code
+paths separately. The crate uses the jemalloc allocator. Both energy parameter
+sets supported by RIsearch2 (\texttt{t04} and \texttt{t99}, derived from the
+Turner nearest-neighbour parameters) are retained and selected at run time
+(see Section~\ref{sec:bindings}).
 
 Behaviour preservation is enforced by a parity test suite. Integration tests
 compare RIsearch3 output against the original C implementation across seed
@@ -71,27 +96,175 @@ re-validating downstream results.
 On equivalent inputs, RIsearch3 is $2{-}3\times$ faster than RIsearch2 in
 wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalised.
 
+% =============================================================
+%  PYTHON BINDINGS AND THERMODYNAMIC PARAMETERS
+% =============================================================
+\section{Python Bindings and Thermodynamic Parameters}\label{sec:bindings}
+
 \subsection{Command-line interface}\label{subsec:cli}
 
-% - Subcommand structure, sensible defaults, useful --help.
-% - One short usage example in a verbatim block.
+% - Subcommand structure: risearch index / risearch search.
+% - Named output formats (--format detailed|cigar|bindingsite|minimal)
+%   replace numeric -p/-p2/-p3/-p4 flags.
+% - Streaming stdout; --compress gzip|zstd.
+% - Legacy flag forms accepted with deprecation warnings for migration.
+% - Single static binary: cargo install risearch3.
+% - One short verbatim usage example.
 
-\subsection{Python bindings}\label{subsec:bindings}
+\subsection{Python bindings}\label{subsec:pybindings}
 
-% - PyO3-based bindings; pip-installable wheel.
-% - Minimal Python snippet showing a query + result iteration.
-% - Sets up the off-target pipeline as the worked example.
+% - Three public entry points: risearch.index(), risearch.TargetStore.open(),
+%   risearch.search() returning Polars DataFrame via Arrow C Stream Interface
+%   (zero-copy PyCapsule).
+% - Thermodynamic parameter set selectable via matrix='t04'|'t99' kwarg.
+% - pip-installable Maturin wheel.
+% - Short Python snippet: index -> open store -> search -> DataFrame.
+% - Why it matters: downstream tools share one process and one DataFrame;
+%   no subprocess, no text parsing.
 
-\subsection{siRNA off-target pipeline}\label{subsec:pipeline}
+% =============================================================
+%  SIRNA OFF-TARGET DISCOVERY PIPELINE
+% =============================================================
 
-% - Rewritten in modern Python; Polars for tabular ops.
-% - YAML configuration; single CLI entry point.
-% - Built on top of the Python bindings (Sec.~\ref{subsec:bindings}) — concrete
-%   demonstration of how downstream tools can consume RIsearch3.
-% - Inline benchmark: end-to-end runtime on a reference siRNA set vs. the
-%   RIsearch2-era pipeline. Reference Fig.~\ref{fig:pipeline_benchmark}.
+\begin{figure*}[ht]
+\centering
+\input{figures/workflow}
+\caption{%
+  \textbf{Architecture of RIsearch3 and the siRNA off-target discovery pipeline.}
+  \textbf{Stage~1 (RIsearch):} \texttt{risearch.index()} builds the
+  suffix-array index from the target FASTA; \texttt{risearch.search()} queries
+  it with siRNA sequences via PyO3 Python bindings, returning results as a
+  Polars DataFrame with no intermediate files.
+  \textbf{Stage~2 (Intersection):} \texttt{IntersectionService} joins
+  predicted binding sites against a GTF/BED annotation by genomic coordinates
+  (genome-wide, \texttt{gw}) or transcript identifier
+  (transcriptome-wide, \texttt{tw}), assigning per-site expression values $A_i$;
+  the annotation is memory-mapped via Arrow IPC across all workers.
+  \textbf{Stage~3 (Accessibility):} \texttt{GenomeAccessibilityService}
+  computes per-site RNA opening energies $O_i = -RT\ln p_i$ from the
+  genome FASTA using the RNAplfold algorithm (ViennaRNA~2.7.2;
+  $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$.
+  \textbf{Stage~4 (Partition function):} \texttt{ProbabilityService} computes
+  Boltzmann weights $W_i = A_i\,e^{-(E^\prime_i + O_i)/RT}$ and evaluates
+  per-siRNA partition functions $Z_s = \sum_i W_i$ via a single Polars
+  \texttt{group\_by} aggregation.
+  The \texttt{-{}-temperature} parameter (dashed red arrows) is shared between
+  Stage~3 and Stage~4, ensuring $E^\prime_i$ and $O_i$ are on a consistent
+  thermodynamic scale.
+  Per-site probabilities $P_{\mathrm{off},i} = W_i / Z_s$ and an optional
+  legacy \texttt{.results} summary are written to TSV, CSV, or Parquet.%
+}
+\label{fig:workflow}
+\end{figure*}
 
+\section{siRNA Off-Target Discovery Pipeline}\label{sec:pipeline}
+
+The new siRNA off-target discovery pipeline is a full reimplementation of the
+workflow described in \citet{alkan2017risearch2}, ported from Python~2.7 to
+Python~3.14, restructured as a modular package, and accelerated through
+vectorised DataFrame operations and multi-core parallelism.
+
+\subsection*{Invocation and configuration}
+
+The pipeline exposes two subcommands: \texttt{off-targets}, which executes
+the full analysis, and \texttt{accessibility}, which pre-computes per-site
+RNA opening-energy profiles from a genome or transcriptome FASTA using the
+RNAplfold algorithm (ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna};
+default $W{=}80$, $L{=}40$, $u{=}30$).
+Both subcommands accept a \texttt{-{}-temperature} parameter (default
+$37\,^\circ$C) that is propagated to all thermodynamic calculations: in
+\texttt{accessibility}, it sets the ViennaRNA model temperature
+(\texttt{md.temperature}), so that opening energies $O_i = -RT\ln p_i$ are
+computed at the specified condition; in \texttt{off-targets}, the same
+temperature determines the thermal energy $RT$ in the Boltzmann partition
+function.
+Sharing a single temperature across both stages ensures that hybridisation
+energies $E^\prime_i$ from RIsearch and opening energies $O_i$
+from ViennaRNA are evaluated on a consistent thermodynamic scale before
+summation, directly replicating the intent of the original RIsearch
+model~\citep{wenzel2012risearch}.
+All remaining parameters---RIsearch energy threshold, seed specification,
+saturation parameters $\alpha$, $\gamma$, and $\theta$, and paths to query,
+transcriptome, and on-target files---are declared in a single YAML
+configuration file validated at startup against a typed OmegaConf schema.
+Individual subcommands may be invoked independently to support staged
+workflows.
+
+\subsection*{Pipeline stages}
+
+The four-stage model of \citet{alkan2017risearch2} is preserved
+(Figure~\ref{fig:workflow}). In the first
+stage, siRNA--target interaction predictions are generated by calling
+\texttt{risearch.index()} to build the suffix-array index of the target
+transcriptome and \texttt{risearch.search()} to locate binding sites, both
+invoked directly through the Python bindings
+(Section~\ref{subsec:pybindings}), returning results as a Polars DataFrame
+in the same process with no intermediate files on disk. In the second stage,
+predicted binding sites are intersected with a transcriptome annotation (GTF
+or BED) to retain sites overlapping expressed features and to assign
+position-specific abundance values. Intersection is performed in-memory using
+an NCLS interval index~\citep{ncls} partitioned by chromosome and strand, with
+chromosome--strand pairs distributed across a thread pool; no external tools
+such as \texttt{bedtools} are needed. In the third stage, per-site binding-site opening energies $O_i = -RT\ln p_i$
+are retrieved from per-chromosome Parquet profiles pre-computed by the
+\texttt{accessibility} subcommand using the RNAplfold algorithm
+(ViennaRNA~2.7.2 Python API; $W{=}80$, $L{=}40$, $u{=}30$) at the same
+temperature used for the partition function, so that $E^\prime_i$
+and $O_i$ are on a consistent thermodynamic scale; the Boltzmann-weighted sum
+%
+\begin{equation}
+  Z_s = \sum_{i \in \mathcal{I}_s}
+        A_i \,
+        \exp\!\left(\frac{-\bigl(E^\prime_i + O_i\bigr)}{RT}\right)
+  \label{eq:partition}
+\end{equation}
+%
+\noindent is evaluated as a single vectorised \texttt{group\_by} aggregation
+in Polars, where $A_i$ is the transcript expression level,
+$E^\prime_i$ is the RIsearch hybridisation energy,
+$O_i = -RT\ln p_i$ is the opening energy derived from the RNAplfold unpaired
+probability $p_i$, $R = 1.987\times10^{-3}$\,kcal\,mol$^{-1}$\,K$^{-1}$ is
+the molar gas constant, and $T$ is the folding temperature (default
+$310.15$\,K, $37\,^\circ$C). When an on-target binding site is supplied via \texttt{-{}-on-target-ids},
+its Boltzmann weight $W_{\mathrm{on}}$ is computed identically and added to
+$Z_s$; the on-target probability
+$p_{\mathrm{on}} = W_{\mathrm{on}} / Z_s$
+determines the aggregate off-targeting potential
+$P_{\mathrm{OFF}} = 1 - p_{\mathrm{on}}$. Per-transcript
+off-targeting probabilities $p_{\mathrm{off},i} = W_i / Z_s$ are then computed as column
+operations on the resulting DataFrame. Parametric sweeps over $\alpha$,
+$\gamma$, and $\theta$ are resolved in a single aggregation pass rather than
+repeated sequential iterations. In the fourth stage, results are written
+incrementally as each siRNA completes, in TSV, CSV, or Parquet format.
+
+\subsection*{Parallelism and memory}
+
+When processing a directory of per-siRNA prediction files, the pipeline
+distributes work across a configurable process pool. A spawn-based
+multiprocessing context is used to avoid interaction with the Rayon thread
+pool used internally by Polars. The transcriptome annotation is loaded once
+into Arrow IPC format and memory-mapped into each worker process via the
+operating-system page cache, keeping peak memory proportional to a single
+transcriptome copy regardless of worker count. Prediction files are parsed
+lazily so that only filtered, selected columns are materialised; output is
+streamed to disk incrementally throughout a batch run.
+
+Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of
+the genome-wide siRNA efficacy library of \citet{huesken2005design} searched
+against the repeat-masked GRCh38/hg38 reference genome and intersected against
+an H1299 RNA-seq expression profile (Supplementary Methods), the pipeline
+completes the intersection, accessibility annotation, probability computation,
+and output stages $7{-}9\times$ faster than the legacy Python~2.7
+implementation across batch sizes of 500--2{,}000 siRNAs (five randomised
+trials per batch size; Supplementary Figure~S1). Peak memory across all
+workers plateaus at approximately 7\,GB in the new pipeline regardless of
+batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to
+$\sim$10\,GB as batch size increases.
+
+% =============================================================
+%  CONCLUSION
+% =============================================================
 \section{Conclusion}
 
-% 1 short paragraph: what's available, who benefits, what's next (additional energy
-% models, further integration targets).
+% 1 short paragraph: what's available, who benefits, what's next (pooled-siRNA
+% off-targeting potential, additional energy models, further integration targets).
