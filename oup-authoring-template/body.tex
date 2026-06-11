@@ -39,59 +39,12 @@ users wishing to embed RIsearch3 in their own pipelines.
 % =============================================================
 \section{Rationale for a Rust Reimplementation}\label{sec:rationale}
 
-Updating the existing C codebase would have resolved installation friction
-but not the absence of a library API or the Python~2.7 dependency. Rust was
-chosen because it addresses all three limitations simultaneously.
-
-A \texttt{cargo build -{}-release} produces a statically-linked binary with no
-runtime dependencies, solving the Makefile-and-tarball distribution problem.
-Rust's ownership model eliminates memory-safety defects without a garbage
-collector, preserving the predictable, low-latency performance expected of a
-bioinformatics search kernel. The PyO3 framework provides first-class Python
-interoperability without writing C extension modules; combined with Maturin,
-it enables compiled platform wheels distributed via PyPI, so the Python API
-is available through a standard \texttt{pip install}. Rust's strong type
-system made the reimplementation tractable: the compiler enforces invariants
-that would otherwise require extensive runtime testing, reducing the risk of
-introducing silent numerical discrepancies relative to the original C code.
 
 % =============================================================
 %  RISEARCH3 CORE IMPLEMENTATION
 % =============================================================
 \section{RIsearch3 Core Implementation}\label{sec:core}
 
-RIsearch3 reimplements the suffix-array seed-and-extend algorithm of
-RIsearch2~\citep{alkan2017risearch2} in Rust. The two-stage scheme is
-preserved without modification: a suffix array of the concatenated target
-sequences (with the reverse-complement strand stored explicitly) is
-traversed in parallel with a per-query suffix array to locate maximal seed
-matches, and each seed is then extended by dynamic programming under the
-simplified nearest-neighbour energy model of~\citet{wenzel2012risearch}.
-Match identity follows the parallel-direction trick of
-RIsearch2~\citep[Fig.~1B]{alkan2017risearch2}, with $G{-}A$ and $U{-}C$ identities
-counted as matches so that $G{-}U$ wobble pairs are admitted.
-
-The rewrite focuses on engineering rather than algorithmic change. Suffix-array
-construction is delegated to the \texttt{libsais} library, replacing the
-\texttt{libdivsufsort} library used by RIsearch2; an optional OpenMP build
-provides parallel index construction. Search is parallelised with
-Rayon~\citep{rayon} across seed groups, with each worker holding its own
-dynamic-programming context to avoid contention. The DP extension uses an
-X-drop early-termination heuristic, evaluates the energy model inline rather
-than through precomputed lookup tables, and represents the forward and reverse
-strands through Rust const generics so that the compiler specialises both code
-paths separately. The crate uses the jemalloc allocator. Both energy parameter
-sets supported by RIsearch2 (\texttt{t04} and \texttt{t99}, derived from the
-Turner nearest-neighbour parameters) are retained and selected at run time
-(see Section~\ref{sec:bindings}).
-
-Behaviour preservation is enforced by a parity test suite. Integration tests
-compare RIsearch3 output against the original C implementation across seed
-length and position constraints, mismatch settings, extension parameters,
-both energy parameter sets, $G{-}U$ wobble handling, and the optional banding
-mode. Outputs match bit-for-bit on the regression corpus. Migration risk is
-therefore minimal: existing analyses can adopt RIsearch3 without
-re-validating downstream results.
 
 On equivalent inputs, RIsearch3 is $2{-}3\times$ faster than RIsearch2 in
 wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalised.
