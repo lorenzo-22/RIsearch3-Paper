@@ -158,15 +158,16 @@ as a first-class parameter (Supplementary Methods).
 
 \subsection*{Easier to integrate}
 
-Because the legacy tools communicated through files and subprocesses, embedding
-the workflow in a larger analysis meant orchestrating binaries and parsing their
-text output. RIsearch3 instead exposes its functionality as ordinary Python,
-returning search results as native Polars DataFrames
-(Section~\ref{subsec:pybindings}). The search, intersection, accessibility, and
-probability steps can each be called directly and composed with other
-Python-native tools in a single process, with no intermediate files and no text
-parsing; the bundled pipeline doubles as a reference example of this
-composition.
+Because the legacy pipeline communicated through files and subprocesses,
+embedding it in a larger analysis meant shelling out to a script and parsing its
+text output. The new pipeline instead exposes its stages as an importable Python
+API: the search, intersection, accessibility, and probability services can each
+be called directly and return native Polars DataFrames, so a user can drop any
+stage into an existing Python workflow and pass results to other Python-native
+tools in a single process, with no intermediate files and no text parsing. Built
+on the RIsearch3 core bindings (Section~\ref{subsec:pybindings}), the same
+package thus serves both as a turnkey command-line tool and as a library
+component of bespoke off-target analyses.
 
 \subsection*{Performance}
 
