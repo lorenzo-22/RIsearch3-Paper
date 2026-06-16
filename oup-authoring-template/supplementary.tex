@@ -232,6 +232,42 @@ the partition-function stage.
 At benchmark time, accessibility profiles were pre-computed and stored;
 loading from Parquet is included in the benchmarked wall-clock time.
 
+\paragraph{Accessibility pre-computation benchmark.}
+Folding the complete repeat-masked GRCh38/hg38 reference ($W{=}80$, $L{=}40$,
+$u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the
+legacy \texttt{long\_RNAplfold\_openen.py} script (driven by GNU~\texttt{parallel})
+and the new \texttt{accessibility} subcommand (Table~\ref{tab:acc-bench}).
+The new implementation completes the full-genome fold $\sim$34\% faster
+(8\,h\,45\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in
+$\sim$42\% less disk space (105\,GB vs.\ 180\,GB), the latter because each
+chromosome is written as a single two-strand Parquet file with columnar
+compression rather than two uncompressed \texttt{uint8} binary files
+(forward and reverse). The trade-off is higher peak resident memory
+($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python
+API holds per-chromosome probability matrices in memory rather than streaming
+them through a subprocess; in absolute terms both figures are small relative to
+typical server memory, and this cost is incurred only once per genome and
+folding condition.
+
+\begin{table}[ht]
+\centering
+\caption{Full-genome accessibility pre-computation: legacy script versus the
+new \texttt{accessibility} subcommand (repeat-masked hg38; $W{=}80$, $L{=}40$,
+$u{=}30$; 64 workers).}
+\label{tab:acc-bench}
+\small
+\begin{tabular}{lrr}
+\hline
+Metric & Legacy & New \\
+\hline
+Wall-clock time      & 13\,h\,12\,m & 8\,h\,45\,m \\
+Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
+On-disk profile size & 180\,GB      & 105\,GB \\
+Files per chromosome & 2            & 1 \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection*{H1299 expression annotation}
 
 Per-transcript expression weights for the H1299 (NCI-H1299, large-cell lung
