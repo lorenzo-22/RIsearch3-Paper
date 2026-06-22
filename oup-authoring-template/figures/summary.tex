@@ -31,8 +31,8 @@
 
 % ── Two panels (equal height; tops and bottoms aligned) ──────────────────────
 \node[panel=CoreBorder, fill=CoreBlue] (core) at (0,0) {%
-  {\centering\textbf{\normalsize Search core}\\[1pt]
-   {\footnotesize Rust reimplementation of RIsearch2}\par}\vspace{5pt}
+  {\centering\textbf{\normalsize RIsearch}\\[1pt]
+   {\footnotesize Search core --- Rust reimplementation of RIsearch2}\par}\vspace{5pt}
   \footnotesize
   \textbullet~Bit-for-bit parity with RIsearch2 (regression-tested)\\[2pt]
   \textbullet~$2$--$3\times$ faster wall-clock on equivalent inputs\\[2pt]
@@ -42,8 +42,8 @@
 };
 
 \node[panel=PipeBorder, fill=PipeGreen] (pipe) at (7.3,0) {%
-  {\centering\textbf{\normalsize siRNA off-target pipeline}\\[1pt]
-   {\footnotesize Modern Python rewrite of the RIsearch2 pipeline}\par}\vspace{5pt}
+  {\centering\textbf{\normalsize RIOT}\\[1pt]
+   {\footnotesize siRNA off-target pipeline --- modern Python rewrite}\par}\vspace{5pt}
   \footnotesize
   \textbullet~One-line \texttt{pip install}; \texttt{uv}-locked dependencies\\[2pt]
   \textbullet~No external binaries (ViennaRNA API, NCLS index)\\[2pt]
@@ -56,7 +56,7 @@
 % ── Title band spanning both panels ──────────────────────────────────────────
 \coordinate (topmid) at ($(core.north)!0.5!(pipe.north)$);
 \node[band] at ([yshift=4mm]topmid) {%
-  \textbf{\large RIsearch Package}\quad\textemdash\quad an installable, embeddable toolkit
+  \textbf{\large RIsearch + RIOT}\quad\textemdash\quad an installable, embeddable toolkit
   for RNA--RNA interaction prediction and siRNA off-target discovery%
 };
 

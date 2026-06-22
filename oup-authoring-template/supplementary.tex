@@ -14,7 +14,7 @@
 \centering
 \includegraphics[width=\linewidth]{figures/pipeline_comparison}
 \caption{%
-  \textbf{Wall-clock time and peak memory of the new versus legacy pipeline
+  \textbf{Wall-clock time and peak memory of RIOT versus the legacy pipeline
   across batch sizes.}
   Each box spans the interquartile range of five independent randomised trials;
   the central line marks the median; whiskers extend to the full range.
@@ -22,11 +22,11 @@
   annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
   and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
   library~\citep{huesken2005design}.
-  The new pipeline achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  RIOT achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
   Python~2.7 implementation.
   \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
   by \texttt{/usr/bin/time -v}.
-  The new pipeline plateaus at $\approx$7\,GB regardless of batch size;
+  RIOT plateaus at $\approx$7\,GB regardless of batch size;
   the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
   size increases.
   Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
@@ -42,7 +42,7 @@
 % =============================================================
 \section*{Supplementary Methods}
 
-\subsection*{Pipeline stages and partition-function model}
+\subsection*{RIOT pipeline stages and partition-function model}
 
 The four-stage model of \citet{alkan2017risearch2} is preserved.
 In the first stage, siRNA--target interaction predictions
@@ -90,7 +90,7 @@ written incrementally as each siRNA completes, in TSV, CSV, or Parquet format.
 
 \subsection*{Parallelism and memory}
 
-When processing a directory of per-siRNA prediction files, the pipeline
+When processing a directory of per-siRNA prediction files, RIOT
 distributes work across a configurable process pool. A spawn-based
 multiprocessing context is used to avoid interaction with the Rayon thread
 pool used internally by Polars. The expression annotation is loaded once
@@ -257,7 +257,7 @@ each with a fresh output directory to avoid I/O caching effects.
 Wall-clock time and peak resident-set size (RSS) of the parent process
 were recorded with \texttt{/usr/bin/time -v} (GNU~time).
 Because both pipelines spawn independent child processes (GNU~parallel in
-the legacy case; a spawn-based process pool in the new pipeline), the RSS
+the legacy case; a spawn-based process pool in RIOT), the RSS
 reported reflects only the parent; aggregate memory across all 32 workers
 will exceed this figure.
 
@@ -274,7 +274,7 @@ measurements.
 The legacy pipeline computed per-nucleotide RNA opening energies with a
 Python~2.7 script that wrapped the \texttt{RNAplfold} executable
 (ViennaRNA~2.6.3) as a subprocess, emitting two flat \texttt{uint8} binary
-files per chromosome (one per strand). The new \texttt{accessibility}
+files per chromosome (one per strand). RIOT's \texttt{accessibility}
 subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$,
 $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning
 subprocesses: for each chromosome the call
@@ -288,8 +288,8 @@ Arrow reads.
 \paragraph{Accessibility pre-computation benchmark.}
 Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$,
 64 workers on the AMD EPYC~9554 server) was compared between the legacy script
-(driven by GNU~\texttt{parallel}) and the new \texttt{accessibility} subcommand
-(Table~\ref{tab:acc-bench}). The new implementation completes the full-genome
+(driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand
+(Table~\ref{tab:acc-bench}). RIOT completes the full-genome
 fold $\sim$34\% faster (8\,h\,45\,m vs.\ 13\,h\,12\,m) and stores the resulting
 profiles in $\sim$42\% less disk space (105\,GB vs.\ 180\,GB), the latter
 because each chromosome is written as a single two-strand compressed Parquet
@@ -302,8 +302,8 @@ folding condition.
 
 \begin{table}[ht]
 \centering
-\caption{Full-genome accessibility pre-computation: legacy script versus the
-new \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
+\caption{Full-genome accessibility pre-computation: legacy script versus
+RIOT's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
 64 workers).}
 \label{tab:acc-bench}
 \small

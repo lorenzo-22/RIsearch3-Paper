@@ -26,13 +26,13 @@ off-target pipeline is written in Python~2.7, long past end of life; and
 neither component exposes a library API suitable for embedding in modern
 Python-native analyses.
 
-We present \textbf{RIsearch}, a single package that bundles two components: a
-Rust reimplementation of the RIsearch2 search algorithm---with parity-tested
+We present two complementary tools. \textbf{RIsearch} is a Rust
+reimplementation of the RIsearch2 search algorithm---with parity-tested
 behaviour, a redesigned command-line interface, and PyO3 Python bindings that
-expose search results as native Polars DataFrames---and a rewritten siRNA
-off-target pipeline that consumes those bindings directly. The pipeline thus
-doubles as a reference example for users wishing to embed RIsearch in their own
-analyses.
+expose search results as native Polars DataFrames. \textbf{RIOT} (RIsearch
+siRNA Off-Target Pipeline) is a rewritten siRNA off-target pipeline that
+consumes those bindings directly; it thus doubles as a reference example for
+users wishing to embed RIsearch in their own analyses.
 
 % =============================================================
 %  RATIONALE FOR A RUST REIMPLEMENTATION
@@ -83,12 +83,12 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 \centering
 \input{figures/summary}
 \caption{%
-  \textbf{Overview of the RIsearch package.}
-  RIsearch bundles two components. The \textbf{search core} is a Rust
-  reimplementation of the RIsearch2 algorithm with bit-for-bit parity, a
+  \textbf{Overview of RIsearch and RIOT.}
+  The framework comprises two components. \textbf{RIsearch} is a Rust
+  reimplementation of the RIsearch2 search algorithm with bit-for-bit parity, a
   $2$--$3\times$ wall-clock speed-up, and PyO3 Python bindings that return
-  results as native Polars DataFrames. The \textbf{siRNA off-target pipeline}
-  is a modern Python rewrite that installs with a single \texttt{pip install},
+  results as native Polars DataFrames. \textbf{RIOT} (RIsearch siRNA Off-Target
+  Pipeline) is a modern Python rewrite that installs with a single \texttt{pip install},
   drops all external binaries (using the ViennaRNA Python API and an in-memory
   NCLS index), is driven by YAML configuration, legacy CLI flags, or native
   Slurm orchestration, and runs its post-search stages $7.7$--$10.7\times$
@@ -99,10 +99,11 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 \label{fig:summary}
 \end{figure*}
 
-\section{siRNA Off-Target Discovery Pipeline}\label{sec:pipeline}
+\section{RIOT: a Modernised siRNA Off-Target Pipeline}\label{sec:pipeline}
 
-Alongside the core, we distribute a complete reimplementation of the siRNA
-off-target discovery pipeline of \citet{alkan2017risearch2}
+Alongside the core, we distribute \textbf{RIOT} (RIsearch siRNA Off-Target
+Pipeline), a complete reimplementation of the siRNA off-target pipeline of
+\citet{alkan2017risearch2}
 (Figure~\ref{fig:summary}). Beyond porting the workflow from Python~2.7 to
 Python~3, the rewrite targets three practical barriers that limited adoption of
 the original tool: installation, day-to-day use, and integration into existing
@@ -114,9 +115,9 @@ preserved unchanged and described in full in the Supplementary Methods.
 
 The original pipeline required a Python~2.7 interpreter, a separately compiled
 RIsearch2 C binary, and externally installed \texttt{RNAplfold} (ViennaRNA) and
-\texttt{bedtools} executables on the user's \texttt{PATH}. RIsearch removes
-every external binary: a single \texttt{pip install risearch-pipeline} brings in
-the Rust core as a pre-compiled wheel, the ViennaRNA~2.7.2 Python
+\texttt{bedtools} executables on the user's \texttt{PATH}. RIOT removes
+every external binary: a single \texttt{pip install riot} brings in
+the RIsearch core as a pre-compiled wheel, the ViennaRNA~2.7.2 Python
 API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and
 an in-memory NCLS interval index~\citep{ncls} in place of \texttt{bedtools}. All
 transitive dependencies are resolved and pinned through a universal \texttt{uv}
@@ -126,13 +127,13 @@ machines.
 \subsection*{Easier to use}
 
 The legacy pipeline was a single \texttt{argparse} script driven by a fixed set
-of command-line flags. RIsearch retains backward-compatible flags but adds a
+of command-line flags. RIOT retains backward-compatible flags but adds a
 YAML configuration mode: every option---inputs, the RIsearch energy and seed
 thresholds, the saturation parameters $\alpha$, $\gamma$, and $\theta$, and the
 output format---can be declared in one file, validated at startup against a
 typed OmegaConf schema. A single configuration file captures an entire run,
 making analyses straightforward to reproduce and to share between collaborators.
-For large screens, the pipeline integrates natively with Slurm: one orchestrator
+For large screens, RIOT integrates natively with Slurm: one orchestrator
 submits the indexing, accessibility, and off-target stages as dependent batch
 jobs with per-stage resource requests, replacing hand-written submission
 scripts.
@@ -148,21 +149,21 @@ as a first-class parameter (Supplementary Methods).
 
 Because the legacy pipeline communicated through files and subprocesses,
 embedding it in a larger analysis meant shelling out to a script and parsing its
-text output. The new pipeline instead exposes its stages as an importable Python
+text output. RIOT instead exposes its stages as an importable Python
 API: the search, intersection, accessibility, and probability services can each
 be called directly and return native Polars DataFrames, so a user can drop any
 stage into an existing Python workflow and pass results to other Python-native
 tools in a single process, with no intermediate files and no text parsing. Built
-on the RIsearch core bindings (Section~\ref{subsec:pybindings}), the same
-package thus serves both as a turnkey command-line tool and as a library
-component of bespoke off-target analyses.
+on the RIsearch core bindings (Section~\ref{subsec:pybindings}), RIOT thus
+serves both as a turnkey command-line tool and as a library component of bespoke
+off-target analyses.
 
 \subsection*{Performance}
 
 Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of the
 genome-wide siRNA efficacy library of \citet{huesken2005design} searched against
 the GRCh38/hg38 reference genome and intersected against an H1299
-RNA-seq expression profile, the pipeline completes the intersection,
+RNA-seq expression profile, RIOT completes the intersection,
 accessibility annotation, probability computation, and output stages
 $7.7{-}10.7\times$ faster than the legacy Python~2.7 implementation across batch sizes
 of 500--2{,}000 siRNAs (five randomised trials per batch size; Supplementary
