@@ -1,0 +1,71 @@
+% RIsearch achievements summary — TikZ source
+% Two-panel overview of what the RIsearch package delivers:
+% the search core and the siRNA off-target pipeline.
+% \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc} loaded in main.tex.
+
+% ── Palette ──────────────────────────────────────────────────────────────────
+\definecolor{CoreBlue}{RGB}{179,208,232}    % search core panel
+\definecolor{CoreBorder}{RGB}{68,114,196}
+\definecolor{PipeGreen}{RGB}{198,224,180}   % pipeline panel
+\definecolor{PipeBorder}{RGB}{83,153,51}
+\definecolor{BandGray}{RGB}{64,64,64}        % title band
+\definecolor{FootGray}{RGB}{237,237,237}     % shared-features footer
+
+\begin{tikzpicture}[
+  font=\sffamily,
+  panel/.style={
+    rounded corners=8pt, draw=#1, line width=1pt,
+    text width=6.4cm, align=left, inner sep=9pt, anchor=north,
+    minimum height=4.9cm,
+  },
+  band/.style={
+    rounded corners=6pt, fill=BandGray, text=white,
+    text width=13.4cm, align=center, inner sep=7pt, anchor=south,
+  },
+  foot/.style={
+    rounded corners=6pt, fill=FootGray, draw=BandGray!40,
+    text width=13.4cm, align=center, inner sep=6pt, anchor=north,
+    font=\sffamily\footnotesize,
+  },
+]
+
+% ── Two panels (equal height; tops and bottoms aligned) ──────────────────────
+\node[panel=CoreBorder, fill=CoreBlue] (core) at (0,0) {%
+  {\centering\textbf{\normalsize Search core}\\[1pt]
+   {\footnotesize Rust reimplementation of RIsearch2}\par}\vspace{5pt}
+  \footnotesize
+  \textbullet~Bit-for-bit parity with RIsearch2 (regression-tested)\\[2pt]
+  \textbullet~$2$--$3\times$ faster wall-clock on equivalent inputs\\[2pt]
+  \textbullet~PyO3 Python bindings $\to$ native Polars DataFrames\\[2pt]
+  \textbullet~Single static binary; \texttt{cargo install} / \texttt{pip install}\\[2pt]
+  \textbullet~\texttt{t04}/\texttt{t99} energy models retained
+};
+
+\node[panel=PipeBorder, fill=PipeGreen] (pipe) at (7.3,0) {%
+  {\centering\textbf{\normalsize siRNA off-target pipeline}\\[1pt]
+   {\footnotesize Modern Python rewrite of the RIsearch2 pipeline}\par}\vspace{5pt}
+  \footnotesize
+  \textbullet~One-line \texttt{pip install}; \texttt{uv}-locked dependencies\\[2pt]
+  \textbullet~No external binaries (ViennaRNA API, NCLS index)\\[2pt]
+  \textbullet~YAML config $\cdot$ legacy CLI flags $\cdot$ native Slurm\\[2pt]
+  \textbullet~$7.7$--$10.7\times$ faster post-search stages\\[2pt]
+  \textbullet~Accessibility pre-compute: $34\%$ faster, $42\%$ smaller\\[2pt]
+  \textbullet~Importable Python API returning Polars DataFrames
+};
+
+% ── Title band spanning both panels ──────────────────────────────────────────
+\coordinate (topmid) at ($(core.north)!0.5!(pipe.north)$);
+\node[band] at ([yshift=4mm]topmid) {%
+  \textbf{\large RIsearch Package}\quad\textemdash\quad an installable, embeddable toolkit
+  for RNA--RNA interaction prediction and siRNA off-target discovery%
+};
+
+% ── Shared-features footer ───────────────────────────────────────────────────
+\coordinate (botmid) at ($(core.south)!0.5!(pipe.south)$);
+\node[foot] at ([yshift=-4mm]botmid) {%
+  Shared thermodynamic model: a single \texttt{-{}-temperature} parameter drives
+  both accessibility and the Boltzmann partition function; one YAML file makes
+  every run reproducible and shareable.%
+};
+
+\end{tikzpicture}
