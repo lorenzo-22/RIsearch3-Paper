@@ -26,13 +26,13 @@ off-target pipeline is written in Python~2.7, long past end of life; and
 neither component exposes a library API suitable for embedding in modern
 Python-native analyses.
 
-We present \textbf{RIsearch3}: a Rust reimplementation of the RIsearch2
-algorithm with parity-tested behaviour, a redesigned command-line interface,
-and PyO3 Python bindings that expose search results as native Polars
-DataFrames. Alongside the core, we release a rewritten siRNA off-target
-pipeline that
-consumes the bindings directly and thus doubles as a reference example for
-users wishing to embed RIsearch3 in their own pipelines.
+We present \textbf{RIsearch}, a single package that bundles two components: a
+Rust reimplementation of the RIsearch2 search algorithm---with parity-tested
+behaviour, a redesigned command-line interface, and PyO3 Python bindings that
+expose search results as native Polars DataFrames---and a rewritten siRNA
+off-target pipeline that consumes those bindings directly. The pipeline thus
+doubles as a reference example for users wishing to embed RIsearch in their own
+analyses.
 
 % =============================================================
 %  RATIONALE FOR A RUST REIMPLEMENTATION
@@ -41,12 +41,12 @@ users wishing to embed RIsearch3 in their own pipelines.
 
 
 % =============================================================
-%  RISEARCH3 CORE IMPLEMENTATION
+%  RISEARCH CORE IMPLEMENTATION
 % =============================================================
-\section{RIsearch3 Core Implementation}\label{sec:core}
+\section{RIsearch Core Implementation}\label{sec:core}
 
 
-On equivalent inputs, RIsearch3 is $2{-}3\times$ faster than RIsearch2 in
+On equivalent inputs, RIsearch is $2{-}3\times$ faster than RIsearch2 in
 wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalised.
 
 % =============================================================
@@ -61,7 +61,7 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 %   replace numeric -p/-p2/-p3/-p4 flags.
 % - Streaming stdout; --compress gzip|zstd.
 % - Legacy flag forms accepted with deprecation warnings for migration.
-% - Single static binary: cargo install risearch3.
+% - Single static binary: cargo install risearch.
 % - One short verbatim usage example.
 
 \subsection{Python bindings}\label{subsec:pybindings}
@@ -83,7 +83,7 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 \centering
 \input{figures/workflow}
 \caption{%
-  \textbf{Architecture of RIsearch3 and the siRNA off-target discovery pipeline.}
+  \textbf{Architecture of RIsearch and the siRNA off-target discovery pipeline.}
   \textbf{Stage~1 (RIsearch):} \texttt{risearch.index()} builds the
   suffix-array index from the target FASTA; \texttt{risearch.search()} queries
   it with siRNA sequences via PyO3 Python bindings, returning results as a
@@ -126,7 +126,7 @@ preserved unchanged and described in full in the Supplementary Methods.
 
 The original pipeline required a Python~2.7 interpreter, a separately compiled
 RIsearch2 C binary, and externally installed \texttt{RNAplfold} (ViennaRNA) and
-\texttt{bedtools} executables on the user's \texttt{PATH}. RIsearch3 removes
+\texttt{bedtools} executables on the user's \texttt{PATH}. RIsearch removes
 every external binary: a single \texttt{pip install risearch-pipeline} brings in
 the Rust core as a pre-compiled wheel, the ViennaRNA~2.7.2 Python
 API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and
@@ -138,7 +138,7 @@ machines.
 \subsection*{Easier to use}
 
 The legacy pipeline was a single \texttt{argparse} script driven by a fixed set
-of command-line flags. RIsearch3 retains backward-compatible flags but adds a
+of command-line flags. RIsearch retains backward-compatible flags but adds a
 YAML configuration mode: every option---inputs, the RIsearch energy and seed
 thresholds, the saturation parameters $\alpha$, $\gamma$, and $\theta$, and the
 output format---can be declared in one file, validated at startup against a
@@ -165,7 +165,7 @@ API: the search, intersection, accessibility, and probability services can each
 be called directly and return native Polars DataFrames, so a user can drop any
 stage into an existing Python workflow and pass results to other Python-native
 tools in a single process, with no intermediate files and no text parsing. Built
-on the RIsearch3 core bindings (Section~\ref{subsec:pybindings}), the same
+on the RIsearch core bindings (Section~\ref{subsec:pybindings}), the same
 package thus serves both as a turnkey command-line tool and as a library
 component of bespoke off-target analyses.
 
