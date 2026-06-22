@@ -81,41 +81,29 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 
 \begin{figure*}[ht]
 \centering
-\input{figures/workflow}
+\input{figures/summary}
 \caption{%
-  \textbf{Architecture of RIsearch and the siRNA off-target discovery pipeline.}
-  \textbf{Stage~1 (RIsearch):} \texttt{risearch.index()} builds the
-  suffix-array index from the target FASTA; \texttt{risearch.search()} queries
-  it with siRNA sequences via PyO3 Python bindings, returning results as a
-  Polars DataFrame with no intermediate files.
-  \textbf{Stage~2 (Intersection):} \texttt{IntersectionService} joins
-  predicted binding sites against a GTF/BED annotation by genomic coordinates
-  (genome-wide, \texttt{gw}) or transcript identifier
-  (transcriptome-wide, \texttt{tw}), assigning per-site expression values $A_i$;
-  the annotation is memory-mapped via Arrow IPC across all workers.
-  \textbf{Stage~3 (Accessibility):} \texttt{GenomeAccessibilityService}
-  provides per-site RNA opening energies $O_i = -RT\ln p_i$ using the RNAplfold
-  algorithm (ViennaRNA~2.7.2; $W{=}80$, $L{=}40$, $u{=}30$) at temperature~$T$,
-  either computed on-the-fly from a genome FASTA or read from pre-computed
-  per-chromosome Parquet profiles.
-  \textbf{Stage~4 (Partition function):} \texttt{ProbabilityService} computes
-  Boltzmann weights $W_i = A_i\,e^{-(E^\prime_i + O_i)/RT}$ and evaluates
-  per-siRNA partition functions $Z_s = \sum_i W_i$ via a single Polars
-  \texttt{group\_by} aggregation.
-  The \texttt{-{}-temperature} parameter (dashed red arrows) is shared between
-  Stage~3 and Stage~4, ensuring $E^\prime_i$ and $O_i$ are on a consistent
-  thermodynamic scale.
-  Per-site probabilities $P_{\mathrm{off},i} = W_i / Z_s$ and an optional
-  legacy \texttt{.results} summary are written to TSV, CSV, or Parquet.%
+  \textbf{Overview of the RIsearch package.}
+  RIsearch bundles two components. The \textbf{search core} is a Rust
+  reimplementation of the RIsearch2 algorithm with bit-for-bit parity, a
+  $2$--$3\times$ wall-clock speed-up, and PyO3 Python bindings that return
+  results as native Polars DataFrames. The \textbf{siRNA off-target pipeline}
+  is a modern Python rewrite that installs with a single \texttt{pip install},
+  drops all external binaries (using the ViennaRNA Python API and an in-memory
+  NCLS index), is driven by YAML configuration, legacy CLI flags, or native
+  Slurm orchestration, and runs its post-search stages $7.7$--$10.7\times$
+  faster than the legacy Python~2.7 implementation. Both components share a
+  single \texttt{-{}-temperature} parameter and an importable Python API,
+  making analyses reproducible and easy to embed in existing workflows.%
 }
-\label{fig:workflow}
+\label{fig:summary}
 \end{figure*}
 
 \section{siRNA Off-Target Discovery Pipeline}\label{sec:pipeline}
 
 Alongside the core, we distribute a complete reimplementation of the siRNA
 off-target discovery pipeline of \citet{alkan2017risearch2}
-(Figure~\ref{fig:workflow}). Beyond porting the workflow from Python~2.7 to
+(Figure~\ref{fig:summary}). Beyond porting the workflow from Python~2.7 to
 Python~3, the rewrite targets three practical barriers that limited adoption of
 the original tool: installation, day-to-day use, and integration into existing
 analyses. The underlying four-stage thermodynamic model---search, annotation
