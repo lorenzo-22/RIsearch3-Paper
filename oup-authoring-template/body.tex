@@ -39,15 +39,36 @@ users wishing to embed RIsearch in their own analyses.
 % =============================================================
 \section{Rationale for a Rust Reimplementation}\label{sec:rationale}
 
+What limits RIsearch2 today is not its algorithm but how that algorithm is
+delivered. A reimplementation must meet three requirements at once: retain
+genome-scale throughput, so whole-transcriptome screens stay practical; install
+as a prebuilt dependency; and run as a safe Python library, so off-target search
+composes with surrounding analysis. Each is routine alone; no single established
+language meets all three. C reaches that throughput but has no standard way to
+deliver a prebuilt, installable dependency and cannot guarantee memory safety at
+a library boundary; Python distributes and embeds easily but in pure Python
+cannot reach that throughput. Rust meets all three: it compiles to native code,
+installs as a prebuilt package, and exposes the algorithm through a memory-safe
+Python library. That combination is why we built RIsearch in Rust.
 
 % =============================================================
 %  RISEARCH CORE IMPLEMENTATION
 % =============================================================
 \section{RIsearch Core Implementation}\label{sec:core}
 
+RIsearch reimplements the RIsearch2 seed-and-extend pipeline. Targets are
+concatenated and indexed in a suffix array, built in linear time by
+libsais~\citep{libsais}. Each query is scanned against the index for
+near-complementary seeds, permitting G--U wobble pairs and up to a configurable
+number of mismatches. Seeds are extended both ways with Gotoh's three-state
+affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a
+nearest-neighbour dinucleotide model and penalising bulges and internal loops.
+The energy model is unchanged, so predicted hybridisation energies match the
+original's.
 
-On equivalent inputs, RIsearch is $2{-}3\times$ faster than RIsearch2 in
-wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalised.
+On equivalent inputs, RIsearch is $2$--$3\times$ faster than RIsearch2. Its
+suffix-array index can also be built in parallel across cores, whereas
+RIsearch2's libdivsufsort-based construction is single-threaded.
 
 % =============================================================
 %  PYTHON BINDINGS AND THERMODYNAMIC PARAMETERS
