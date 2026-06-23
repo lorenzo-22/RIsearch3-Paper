@@ -1,71 +1,75 @@
-% RIsearch achievements summary — TikZ source
-% Two-panel overview of what the RIsearch package delivers:
-% the search core and the siRNA off-target pipeline.
+% RIsearch + RIOT overview — TikZ source
+% Stacked workflow: RIsearch search core (top, blue) and the RIOT
+% off-target pipeline (bottom, green); dashed arrow = RIOT calls RIsearch
+% in-process via the PyO3 bindings.
 % \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc} loaded in main.tex.
 
 % ── Palette ──────────────────────────────────────────────────────────────────
-\definecolor{CoreBlue}{RGB}{179,208,232}    % search core panel
+\definecolor{CoreBlue}{RGB}{197,217,241}     % RIsearch container
 \definecolor{CoreBorder}{RGB}{68,114,196}
-\definecolor{PipeGreen}{RGB}{198,224,180}   % pipeline panel
+\definecolor{PipeGreen}{RGB}{210,229,191}     % RIOT container
 \definecolor{PipeBorder}{RGB}{83,153,51}
-\definecolor{BandGray}{RGB}{64,64,64}        % title band
-\definecolor{FootGray}{RGB}{237,237,237}     % shared-features footer
 
 \begin{tikzpicture}[
   font=\sffamily,
-  panel/.style={
-    rounded corners=8pt, draw=#1, line width=1pt,
-    text width=6.4cm, align=left, inner sep=9pt, anchor=north,
-    minimum height=4.9cm,
+  >=Stealth,
+  sbox/.style={
+    draw=black!55, fill=white, rounded corners=3pt, align=center,
+    inner sep=4pt, minimum height=1.05cm, text width=2.5cm,
+    font=\sffamily\scriptsize,
   },
-  band/.style={
-    rounded corners=6pt, fill=BandGray, text=white,
-    text width=13.4cm, align=center, inner sep=7pt, anchor=south,
+  io/.style={
+    draw=black!45, fill=black!6, rounded corners=2pt, align=center,
+    inner sep=3pt, minimum height=1.05cm, text width=1.8cm,
+    font=\sffamily\scriptsize,
   },
-  foot/.style={
-    rounded corners=6pt, fill=FootGray, draw=BandGray!40,
-    text width=13.4cm, align=center, inner sep=6pt, anchor=north,
-    font=\sffamily\footnotesize,
-  },
+  flow/.style={->, thick, draw=black!60},
+  call/.style={->, thick, dashed, draw=PipeBorder, line width=1pt},
+  ttl/.style={font=\sffamily\bfseries\normalsize, anchor=west},
 ]
 
-% ── Two panels (equal height; tops and bottoms aligned) ──────────────────────
-\node[panel=CoreBorder, fill=CoreBlue] (core) at (0,0) {%
-  {\centering\textbf{\normalsize RIsearch}\\[1pt]
-   {\footnotesize Search core --- Rust reimplementation of RIsearch2}\par}\vspace{5pt}
-  \footnotesize
-  \textbullet~Bit-for-bit parity with RIsearch2 (regression-tested)\\[2pt]
-  \textbullet~$2$--$3\times$ faster wall-clock on equivalent inputs\\[2pt]
-  \textbullet~PyO3 Python bindings $\to$ native Polars DataFrames\\[2pt]
-  \textbullet~Single static binary; \texttt{cargo install} / \texttt{pip install}\\[2pt]
-  \textbullet~\texttt{t04}/\texttt{t99} energy models retained
-};
+% ── RIsearch row (top) ───────────────────────────────────────────────────────
+\node[io]   (tgt)  at (0,0)            {Target\\FASTA};
+\node[sbox] (idx)  [right=0.55cm of tgt]  {Suffix-array\\index};
+\node[sbox] (srch) [right=0.45cm of idx]  {Seed-and-extend\\DP search};
+\node[io]   (hits) [right=0.55cm of srch] {Interaction\\hits (TSV)};
 
-\node[panel=PipeBorder, fill=PipeGreen] (pipe) at (7.3,0) {%
-  {\centering\textbf{\normalsize RIOT}\\[1pt]
-   {\footnotesize siRNA off-target pipeline --- modern Python rewrite}\par}\vspace{5pt}
-  \footnotesize
-  \textbullet~One-line \texttt{pip install}; \texttt{uv}-locked dependencies\\[2pt]
-  \textbullet~No external binaries (ViennaRNA API, NCLS index)\\[2pt]
-  \textbullet~YAML config $\cdot$ legacy CLI flags $\cdot$ native Slurm\\[2pt]
-  \textbullet~$7.7$--$10.7\times$ faster post-search stages\\[2pt]
-  \textbullet~Accessibility pre-compute: $34\%$ faster, $42\%$ smaller\\[2pt]
-  \textbullet~Importable Python API returning Polars DataFrames
-};
+\draw[flow] (tgt)  -- (idx);
+\draw[flow] (idx)  -- (srch);
+\draw[flow] (srch) -- (hits);
 
-% ── Title band spanning both panels ──────────────────────────────────────────
-\coordinate (topmid) at ($(core.north)!0.5!(pipe.north)$);
-\node[band] at ([yshift=4mm]topmid) {%
-  \textbf{\large RIsearch + RIOT}\quad\textemdash\quad an installable, embeddable toolkit
-  for RNA--RNA interaction prediction and siRNA off-target discovery%
-};
+\node[ttl] (ristitle) at (tgt.west |- 0,1.05) {RIsearch \textemdash\ search core};
 
-% ── Shared-features footer ───────────────────────────────────────────────────
-\coordinate (botmid) at ($(core.south)!0.5!(pipe.south)$);
-\node[foot] at ([yshift=-4mm]botmid) {%
-  Shared thermodynamic model: a single \texttt{-{}-temperature} parameter drives
-  both accessibility and the Boltzmann partition function; one YAML file makes
-  every run reproducible and shareable.%
-};
+\begin{scope}[on background layer]
+  \node[fit=(ristitle)(tgt)(hits),
+        draw=CoreBorder, fill=CoreBlue, rounded corners=8pt,
+        inner sep=9pt, line width=1pt] (risbox) {};
+\end{scope}
+
+% ── RIOT row (bottom) ────────────────────────────────────────────────────────
+\node[sbox] (s1) at (0,-3.5)           {(\textit{i})\\RIsearch\\index \& search\\(PyO3)};
+\node[sbox] (s2) [right=0.45cm of s1]  {(\textit{ii})\\Intersection\\(NCLS index)};
+\node[sbox] (s3) [right=0.45cm of s2]  {(\textit{iii})\\Accessibility\\(ViennaRNA API)};
+\node[sbox] (s4) [right=0.45cm of s3]  {(\textit{iv})\\Partition function\\$\to P_{\mathrm{off}}$};
+\node[io]   (out) [right=0.55cm of s4] {Off-target\\probs (TSV)};
+
+\draw[flow] (s1) -- (s2);
+\draw[flow] (s2) -- (s3);
+\draw[flow] (s3) -- (s4);
+\draw[flow] (s4) -- (out);
+
+\node[ttl] (riottitle) at (s1.west |- 0,-2.2)
+  {RIOT \textemdash\ siRNA off-target pipeline \;(\texttt{pip install riot})};
+
+\begin{scope}[on background layer]
+  \node[fit=(riottitle)(s1)(out),
+        draw=PipeBorder, fill=PipeGreen, rounded corners=8pt,
+        inner sep=9pt, line width=1pt] (riotbox) {};
+\end{scope}
+
+% ── Dashed in-process call: RIOT stage (i) -> RIsearch ───────────────────────
+\draw[call] (s1.north) -- (s1.north |- risbox.south)
+  node[midway, right=1pt, font=\sffamily\scriptsize, text=PipeBorder!90!black]
+  {in-process via PyO3 bindings};
 
 \end{tikzpicture}
