@@ -10,7 +10,7 @@ synthetic small interfering RNAs (siRNAs), where unintended off-target
 binding can confound RNAi knockdown experiments and limit therapeutic
 application.
 
-RIsearch2~\citep{alkan2017risearch2} is a widely used tool for large-scale
+RIsearch2~\citep{alkan2017risearch2} is a tool designed for large-scale
 screens of near-complementary RNA--RNA interactions: it combines a
 suffix-array index of the target with a seed-and-extend dynamic-programming
 step that uses the simplified energy model introduced by
@@ -81,20 +81,28 @@ wall-clock time.% TODO: name the benchmark dataset (size, hardware) once finalis
 
 \begin{figure*}[ht]
 \centering
-\input{figures/summary}
+\resizebox{\linewidth}{!}{\input{figures/summary}}
 \caption{%
   \textbf{Overview of RIsearch and RIOT.}
-  The framework comprises two components. \textbf{RIsearch} is a Rust
-  reimplementation of the RIsearch2 search algorithm with bit-for-bit parity, a
-  $2$--$3\times$ wall-clock speed-up, and PyO3 Python bindings that return
-  results as native Polars DataFrames. \textbf{RIOT} (RIsearch siRNA Off-Target
-  Pipeline) is a modern Python rewrite that installs with a single \texttt{pip install},
-  drops all external binaries (using the ViennaRNA Python API and an in-memory
-  NCLS index), is driven by YAML configuration, legacy CLI flags, or native
-  Slurm orchestration, and runs its post-search stages $7.7$--$10.7\times$
-  faster than the legacy Python~2.7 implementation. Both components share a
-  single \texttt{-{}-temperature} parameter and an importable Python API,
-  making analyses reproducible and easy to embed in existing workflows.%
+  \textbf{(Top, blue)} \textbf{RIsearch} is a Rust reimplementation of the
+  RIsearch2 search algorithm, installable as a single static binary via
+  \texttt{cargo install risearch} (Crates.io) or as a Python wheel via
+  \texttt{pip install risearch} (PyPI).
+  The core builds a suffix-array index of target sequences and runs a
+  seed-and-extend dynamic-programming search using the simplified RIsearch
+  energy model, producing interaction hits as a TSV file.
+  \textbf{(Bottom, green)} \textbf{RIOT} (RIsearch siRNA Off-Target Pipeline)
+  is a modern Python~3 rewrite installable with a single \texttt{pip install riot},
+  which bundles the RIsearch wheel, the ViennaRNA~2.7.2 Python API, and an
+  in-memory NCLS interval index with no external binaries required.
+  RIOT orchestrates four stages: (\textit{i})~RIsearch index and search
+  invoked natively via PyO3 bindings; (\textit{ii})~intersection of predicted
+  binding sites with a transcriptome annotation using an NCLS index;
+  (\textit{iii})~per-site RNA accessibility computed through the ViennaRNA
+  Python API; and (\textit{iv})~a per-siRNA Boltzmann partition function
+  yielding off-target probabilities, written to a TSV output file.
+  The dashed arrow indicates that RIOT calls RIsearch within the same process
+  via the Python bindings, with no subprocess or intermediate files.%
 }
 \label{fig:summary}
 \end{figure*}

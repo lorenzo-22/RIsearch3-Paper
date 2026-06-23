@@ -1,71 +1,183 @@
-% RIsearch achievements summary — TikZ source
-% Two-panel overview of what the RIsearch package delivers:
-% the search core and the siRNA off-target pipeline.
-% \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc} loaded in main.tex.
+% RIsearch + RIOT overview — TikZ source (Figure 1).
+% A two-lane install -> execute -> output flow, blocks aligned on one row per lane.
+%   Lane 1: RIsearch  (Crates.io / PyPI install, SA seed-and-extend, generic output).
+%   Lane 2: RIOT      (PyPI install, RIsearch-backed pipeline, final off-target file).
+% Required libraries (already loaded in main.tex for summary.tex):
+%   \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc}
 
-% ── Palette ──────────────────────────────────────────────────────────────────
-\definecolor{CoreBlue}{RGB}{179,208,232}    % search core panel
-\definecolor{CoreBorder}{RGB}{68,114,196}
-\definecolor{PipeGreen}{RGB}{198,224,180}   % pipeline panel
-\definecolor{PipeBorder}{RGB}{83,153,51}
-\definecolor{BandGray}{RGB}{64,64,64}        % title band
-\definecolor{FootGray}{RGB}{237,237,237}     % shared-features footer
+% ── Palette (matches the package's two-tool colour identity) ─────────────────
+\definecolor{CoreBlue}{RGB}{179,208,232}     % RIsearch fill
+\definecolor{CoreBorder}{RGB}{68,114,196}    % RIsearch border
+\definecolor{PipeGreen}{RGB}{198,224,180}    % RIOT fill
+\definecolor{PipeBorder}{RGB}{83,153,51}     % RIOT border
+\definecolor{CodeBg}{RGB}{246,246,248}       % code-snippet background
+\definecolor{CodeBd}{RGB}{200,200,205}       % code-snippet border
+\definecolor{ChanBg}{RGB}{255,255,255}       % install-channel chip
+\definecolor{InkGray}{RGB}{70,70,70}
+\definecolor{VrnaGold}{RGB}{229,178,72}      % ViennaRNA accent
+\definecolor{NclsPlum}{RGB}{150,110,170}     % NCLS accent
 
 \begin{tikzpicture}[
   font=\sffamily,
-  panel/.style={
-    rounded corners=8pt, draw=#1, line width=1pt,
-    text width=6.4cm, align=left, inner sep=9pt, anchor=north,
-    minimum height=4.9cm,
+  >={Stealth[length=2.6mm]},
+  laneband/.style={
+    rounded corners=3pt, fill=#1, text=white, anchor=south west,
+    minimum height=6mm, inner xsep=6pt, font=\sffamily\bfseries\small,
   },
-  band/.style={
-    rounded corners=6pt, fill=BandGray, text=white,
-    text width=13.4cm, align=center, inner sep=7pt, anchor=south,
+  stage/.style={
+    rounded corners=6pt, draw=#1, line width=0.9pt, fill=#1!18,
+    align=center, inner sep=5pt, font=\sffamily\small\bfseries, text=InkGray,
   },
-  foot/.style={
-    rounded corners=6pt, fill=FootGray, draw=BandGray!40,
-    text width=13.4cm, align=center, inner sep=6pt, anchor=north,
-    font=\sffamily\footnotesize,
+  info/.style={
+    rounded corners=3pt, draw=#1!55, line width=0.5pt, fill=#1!8,
+    align=left, inner sep=5pt, font=\sffamily\scriptsize, text=black,
   },
+  code/.style={
+    rounded corners=3pt, draw=CodeBd, line width=0.5pt, fill=CodeBg,
+    align=left, inner sep=4pt, font=\ttfamily\scriptsize, text=black,
+  },
+  chip/.style={
+    rounded corners=3pt, draw=#1, line width=0.7pt, fill=ChanBg,
+    align=center, inner sep=3pt, font=\sffamily\scriptsize\bfseries, text=#1,
+  },
+  flow/.style={->, line width=1pt, draw=#1},
+  caplbl/.style={font=\sffamily\scriptsize, text=InkGray, align=center},
 ]
 
-% ── Two panels (equal height; tops and bottoms aligned) ──────────────────────
-\node[panel=CoreBorder, fill=CoreBlue] (core) at (0,0) {%
-  {\centering\textbf{\normalsize RIsearch}\\[1pt]
-   {\footnotesize Search core --- Rust reimplementation of RIsearch2}\par}\vspace{5pt}
-  \footnotesize
-  \textbullet~Bit-for-bit parity with RIsearch2 (regression-tested)\\[2pt]
-  \textbullet~$2$--$3\times$ faster wall-clock on equivalent inputs\\[2pt]
-  \textbullet~PyO3 Python bindings $\to$ native Polars DataFrames\\[2pt]
-  \textbullet~Single static binary; \texttt{cargo install} / \texttt{pip install}\\[2pt]
-  \textbullet~\texttt{t04}/\texttt{t99} energy models retained
-};
+% column centres (shared by both lanes so the two rows line up vertically)
+\def\colA{0}
+\def\colB{6.2}
+\def\colC{12.4}
 
-\node[panel=PipeBorder, fill=PipeGreen] (pipe) at (7.3,0) {%
-  {\centering\textbf{\normalsize RIOT}\\[1pt]
-   {\footnotesize siRNA off-target pipeline --- modern Python rewrite}\par}\vspace{5pt}
-  \footnotesize
-  \textbullet~One-line \texttt{pip install}; \texttt{uv}-locked dependencies\\[2pt]
-  \textbullet~No external binaries (ViennaRNA API, NCLS index)\\[2pt]
-  \textbullet~YAML config $\cdot$ legacy CLI flags $\cdot$ native Slurm\\[2pt]
-  \textbullet~$7.7$--$10.7\times$ faster post-search stages\\[2pt]
-  \textbullet~Accessibility pre-compute: $34\%$ faster, $42\%$ smaller\\[2pt]
-  \textbullet~Importable Python API returning Polars DataFrames
-};
+% =====================================================================
+%  LANE 1 — RIsearch  (all blocks on one row, tops aligned at y = 0)
+% =====================================================================
+% ---- (1a) Install: two channels stacked vertically (no overlap) -----
+\node[stage=CoreBorder, text width=3.4cm, anchor=north] (rs-install) at (\colA,0)
+  {Install (Rust core)};
+\node[chip=CoreBorder, anchor=north, text width=1.8cm]
+  (rs-crates) at ([yshift=-4pt]rs-install.south) {Crates.io};
+\node[code, anchor=north, text width=3.35cm]
+  (rs-crates-cmd) at ([yshift=-2pt]rs-crates.south)
+  {\$ cargo install risearch\\ \$ risearch --help};
+\node[chip=CoreBorder, anchor=north, text width=1.8cm]
+  (rs-pypi) at ([yshift=-5pt]rs-crates-cmd.south) {PyPI};
+\node[code, anchor=north, text width=3.35cm]
+  (rs-pypi-cmd) at ([yshift=-2pt]rs-pypi.south)
+  {\$ pip install risearch\\ >>> import risearch};
+\node[draw=CoreBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(rs-install)(rs-crates-cmd)(rs-pypi-cmd), inner sep=4pt] (rs-install-box) {};
 
-% ── Title band spanning both panels ──────────────────────────────────────────
-\coordinate (topmid) at ($(core.north)!0.5!(pipe.north)$);
-\node[band] at ([yshift=4mm]topmid) {%
-  \textbf{\large RIsearch + RIOT}\quad\textemdash\quad an installable, embeddable toolkit
-  for RNA--RNA interaction prediction and siRNA off-target discovery%
-};
+% ---- (1b) Execute: conceptual description (no commands) -------------
+\node[stage=CoreBorder, text width=4.55cm, anchor=north] (rs-run) at (\colB,0)
+  {Index \& search};
+\node[info=CoreBorder, anchor=north, text width=4.55cm]
+  (rs-run-info) at ([yshift=-4pt]rs-run.south)
+  {\textbullet~Suffix-array (SA) index of targets\\[2pt]
+   \textbullet~Seed-and-extend DP extension\\[2pt]
+   \textbullet~Simplified RIsearch energy model};
+\node[draw=CoreBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(rs-run)(rs-run-info), inner sep=4pt] (rs-run-box) {};
 
-% ── Shared-features footer ───────────────────────────────────────────────────
-\coordinate (botmid) at ($(core.south)!0.5!(pipe.south)$);
-\node[foot] at ([yshift=-4mm]botmid) {%
-  Shared thermodynamic model: a single \texttt{-{}-temperature} parameter drives
-  both accessibility and the Boltzmann partition function; one YAML file makes
-  every run reproducible and shareable.%
-};
+% ---- (1c) Output: generic, illustrative (not the real schema) -------
+\node[stage=CoreBorder, text width=5.0cm, anchor=north] (rs-out) at (\colC,0)
+  {RIsearch output};
+\node[code, anchor=north, text width=5.0cm]
+  (rs-out-tbl) at ([yshift=-4pt]rs-out.south)
+  {query   target   start   end   energy\\[1pt]
+   q1      chrX      881    901   -28.4\\
+   q1      chrY      233    253   -24.1\\[3pt]
+   \# TSV output};
+\node[draw=CoreBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(rs-out)(rs-out-tbl), inner sep=4pt] (rs-out-box) {};
+
+% horizontal lane arrows (both pinned to the run-header centre line)
+\draw[flow=CoreBorder] (rs-install-box.east|-rs-run) -- (rs-run-box.west|-rs-run);
+\draw[flow=CoreBorder] (rs-run-box.east|-rs-run) -- (rs-out-box.west|-rs-run);
+
+% lane-1 label tab
+\node[laneband=CoreBorder]
+  (rs-tab) at ([yshift=4pt]rs-install-box.north west)
+  {RIsearch \textemdash\ RNA--RNA interaction search core};
+
+% bounding helper for clearance below lane 1
+\node[fit=(rs-install-box)(rs-run-box)(rs-out-box), inner sep=0] (lane1) {};
+
+% =====================================================================
+%  LANE 2 — RIOT  (all blocks on one row, tops aligned below lane 1)
+% =====================================================================
+\coordinate (l2) at ([yshift=-2.0cm]lane1.south -| rs-install);
+
+% ---- (2a) Install ---------------------------------------------------
+\node[stage=PipeBorder, text width=4.1cm, anchor=north] (ro-install) at (l2)
+  {Install (RIOT pipeline)};
+\node[chip=PipeBorder, anchor=north, text width=1.8cm]
+  (ro-pypi) at ([yshift=-4pt]ro-install.south) {PyPI};
+\node[code, anchor=north, text width=4.1cm]
+  (ro-install-cmd) at ([yshift=-2pt]ro-pypi.south)
+  {\$ pip install riot\\[1pt]
+   \# bundles: risearch wheel,\\
+   \# ViennaRNA API, NCLS\\
+   \# uv-locked, no binaries};
+\node[draw=PipeBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(ro-install)(ro-install-cmd), inner sep=4pt] (ro-install-box) {};
+
+% ---- (2b) Pipeline (built on RIsearch) ------------------------------
+\node[stage=PipeBorder, text width=4.55cm, anchor=north]
+  (ro-run) at ([xshift=\colB cm]ro-install.north) {Run off-target pipeline};
+\node[code, anchor=north, text width=4.55cm]
+  (ro-run-cmd) at ([yshift=-4pt]ro-run.south)
+  {\$ riot off-targets \textbackslash\\
+   \ \ \ -s sirna.fa --genome hg38.fa \textbackslash\\
+   \ \ \ -t annot.gtf -a access/ \textbackslash\\
+   \ \ \ --temperature 37 -o off.tsv\\[2pt]
+   \# or: riot -c run.yaml};
+\node[stage=CoreBorder, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries]
+  (st-search) at ([yshift=-4pt]ro-run-cmd.south) {1. RIsearch index + search (in-process)};
+\node[stage=NclsPlum, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries, fill=NclsPlum!18, draw=NclsPlum]
+  (st-isect) at ([yshift=-3pt]st-search.south) {2. Intersect annotation \textbullet\ NCLS};
+\node[stage=VrnaGold, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries, fill=VrnaGold!22, draw=VrnaGold]
+  (st-acc) at ([yshift=-3pt]st-isect.south) {3. Accessibility \textbullet\ ViennaRNA API};
+\node[stage=PipeBorder, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries]
+  (st-prob) at ([yshift=-3pt]st-acc.south) {4. Boltzmann partition function $Z_s$};
+\node[draw=PipeBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(ro-run)(ro-run-cmd)(st-search)(st-prob), inner sep=4pt] (ro-run-box) {};
+
+\draw[flow=InkGray, line width=0.7pt] (st-search.south) -- (st-isect.north);
+\draw[flow=InkGray, line width=0.7pt] (st-isect.south) -- (st-acc.north);
+\draw[flow=InkGray, line width=0.7pt] (st-acc.south) -- (st-prob.north);
+
+% ---- (2c) Final output file -----------------------------------------
+\node[stage=PipeBorder, text width=5.0cm, anchor=north]
+  (ro-out) at ([xshift=\colC cm]ro-install.north) {RIOT output};
+\node[code, anchor=north, text width=5.0cm]
+  (ro-out-tbl) at ([yshift=-4pt]ro-out.south)
+  {sirna\_id   transcript\_id   P\_off\\[1pt]
+   si\_001     ENST...0412      0.973\\
+   si\_001     ENST...1097      0.118\\[3pt]
+   \# TSV output};
+\node[draw=PipeBorder!45, line width=0.6pt, rounded corners=6pt,
+      fit=(ro-out)(ro-out-tbl), inner sep=4pt] (ro-out-box) {};
+
+% horizontal lane arrows (both pinned to the run-header centre line)
+\draw[flow=PipeBorder] (ro-install-box.east|-ro-run) -- (ro-run-box.west|-ro-run);
+\draw[flow=PipeBorder] (ro-run-box.east|-ro-run) -- (ro-out-box.west|-ro-run);
+
+% lane-2 label tab
+\node[laneband=PipeBorder]
+  (ro-tab) at ([yshift=4pt]ro-install-box.north west)
+  {RIOT \textemdash\ RIsearch siRNA Off-Target pipeline};
+
+% ---- "built on RIsearch" connector: straight segments, routed down the
+%      clear corridor between the pipeline box and the off-target table so
+%      it passes beside/under those boxes rather than through them.
+\coordinate (cdrop) at ([yshift=-0.5cm]rs-out-box.south);            % just below Output
+\coordinate (ccorr) at (9.2, 0 |- cdrop);                            % left into the corridor
+\coordinate (cdown) at (9.2, 0 |- st-search.east);                   % straight down the corridor
+\draw[flow=CoreBorder, line width=1pt, dashed]
+  (rs-out-box.south) -- (cdrop) -- (ccorr) -- (cdown) -- (st-search.east);
+\node[caplbl, fill=white, inner sep=1.5pt]
+  at ([yshift=-0.3cm]$(cdrop)!0.5!(ccorr)$)
+  {same engine, same process};
 
 \end{tikzpicture}
