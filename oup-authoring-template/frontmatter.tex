@@ -24,7 +24,7 @@
 
 \abstract{%
 \textbf{Motivation:} RNA--RNA interaction prediction underpins siRNA design and non-coding RNA analysis. RIsearch2 is a widely used tool but predates modern packaging and the Python data ecosystem, limiting integration into contemporary analysis pipelines.\\
-\textbf{Results:} We present RIsearch, a Rust reimplementation of the RIsearch2 search algorithm with Python bindings, and RIOT (RIsearch siRNA Off-Target Pipeline), a modern rewrite of the off-target workflow built directly on those bindings. RIsearch is functionally equivalent to RIsearch2 while running 2--3$\times$ faster; RIOT installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
+\textbf{Results:} We present RIsearch, a Rust reimplementation of the RIsearch2 search algorithm with Python bindings, and RIOT (RIsearch siRNA Off-Target pipeline), a modern rewrite of the off-target workflow built directly on those bindings. RIsearch is functionally equivalent to RIsearch2 while running 2--3$\times$ faster; RIOT installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
 \textbf{Availability and implementation:} RIsearch and RIOT are released under [LICENSE] at \href{https://github.com/}{GitHub URL}. The Rust binary installs via \texttt{cargo install risearch}; the Python packages are available on PyPI as \texttt{risearch} (search core) and \texttt{riot} (off-target pipeline).\\
 \textbf{Contact:} \href{mailto:lorenzofavaro.soa@gmail.com}{lorenzofavaro.soa@gmail.com}}
 
