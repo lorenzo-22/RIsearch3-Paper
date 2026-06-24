@@ -319,3 +319,88 @@ Files per chromosome & 2            & 1 \\
 \hline
 \end{tabular}
 \end{table}
+\section{Temperature dependent energy parameters}\label{temperature-dependent-energy-parameters}
+Notation, N indicates an unknown nucleotide. In the stacking energies, the N is
+substituted with a nucleotide (ACGT/U) giving the stack the highest possible
+energy. \_ indicates gap, a missing nucleotide, at the corresponding position,
+that is a bulge on the strand opposite the gap.
+\begin{verbatim}
+RNA: rA,rC,rG,rU,rN,r\_
+DNA: dA,dC,dG,dT,dN,d\_
+
+RNA/RNA: 5'-AC-3' bound to 3'-UG-5': rACUG
+DNA/DNA: 5'-AC-3' bound to 3'-TG-5': dACTG
+RNA/DNA: 5'-rAC-3' bound to 3'-dTG-5': rACdUG
+\end{verbatim}
+
+The energy model of RIsearch is the sum of the energies of nucleotide stacks,
+where a stack is two nucleotides bound (aligned) to two nucleotides on the
+opposite strand or aligned to gaps on the opposite strand when the alignment
+contains bulges / gaps. A particular case is the stacks initiating or
+terminating the binding, which are written as, e.g. \_G\_C and G\_C\_,
+respectively. These stacks are not allowed in other places in the alignment.
+
+The binding energy matrices are derived from those in ViennaRNA\cite{ref4},
+which are again derived from the nearest neighbor energy model parameters from
+papers\cite{ref5,ref6,ref7,ref8,ref9,ref10,ref11,ref12} cited by ViennaRNA.
+\begin{verbatim}
+RNA/RNA: 2.6.3 RNAduplex
+
+DNA/DNA: 2.6.3 RNAduplex -P DNA
+
+RNA/DNA: 2.1.9h RNAduplex (in source code and binary only)
+\end{verbatim}
+
+The RNA/RNA and DNA/DNA matrices are implemented in all later versions of
+ViennaRNA. However, the RNA/DNA matrices are only found in version 2.1.9h,
+where they are the default in certain programs including RNAduplex. The first
+(target) sequence must be the RNA, and the second the DNA, and these should be
+entered with the corresponding alphabets, that is with U or T, respectively.
+
+When we allow GAPS along with the standard nucleotides, we have $5^4 = 625$ stacking energy parameters (SEP) we need to obtain values for in each of the four cases. However, not all SEPs are allowed, e.g. an alignment must start and end with a binding pair (\_G\_C is defined, but not \_G\_A) and a gap on both strands is not allowed. In addition, some SEPs are identical due to the nature of the underlying chemistry (rGCAU is the same as rUACG, but rGCdAT is not the same as rUAdCG) and some SEPs are linearly dependent due to the nature of the model (a gap opened must also be closed (an example gap opening could be rAAU\_ and a closing could be rAA\_U).
+
+The undefined SEPs are set to a large positive energy (+20.0 kcal/mol) in the energy matrices, and we enforce linear dependencies according to the rules below
+
+\begin{enumerate}
+\item A stack of nucleotides is, e.g. rACGU or rACdGT is written as $(\mathit{ijkl})$
+
+\item Nucleotide are considered pairing when one of AU, AT, CG, GU and GT
+
+\item If $i$ is paired but $j$ is not paired: $(\mathit{ijkl}) = (\mathit{jilk})$, e.g. rACdGG = rCAdGG
+
+\item For RNA/RNA and DNA/DNA $(\mathit{ijkl}) = (\mathit{lkji})$
+
+\item For unknown nucleotides (N) the maximum (worst) value is chosen amongst the possibilities for N. In this way we determine the $6^4 = 1296$ SEPs needed for RIsearch.
+\end{enumerate}
+
+These rules reduced the number of parameters to be determined from 625 to 266 for RNA/RNA and DNA/DNA and to 459 in RNA/DNA and removed the linear interdependency of the parameters. The actual number of SEPs to be determined is a little lower when illegal stacking values are removed.
+
+The SEPs were obtained by fitting energies and alignments from the respective RNA, DNA and hybrid modes of the RNAduplex according to the list above. To this end we constructed 4 times 50,000 alignments of the following types
+
+\begin{enumerate}
+\item Exact complimentary sequences
+
+\item GU internal size 1-4 and, terminal, size -4
+
+\item internal loops of size 1-4
+
+\item internal bulges of size 1-4
+\end{enumerate}
+
+In each case the sequences were otherwise random and constructed to be 10-20nt
+complimentary + variation 4nt + 10-20nt complimentary. The alignments obtained
+from RNAduplex were then parameterized according to the corresponding stacking
+base pairs and the SEPs were obtained by a linear regression fit of the
+RNAduplex energy. In cases where the alignments were not full length, the
+alignments and energies were discarded before fitting.
+
+The RNA/DNA parameters in both the previous versions of RIsearch and in the
+2.1.9h version of ViennaRNA were constructed from the Sugimoto 95
+paper\cite{ref13}, which only contains the SEPs for canonical basepair stacks
+like rACdTG. Missing values were obtained as the average of corresponding
+RNA/RNA and DNA/DNA SEP. However the RNA/DNA parameters have been improved upon
+in two papers\cite{ref14,ref15}, which respectively adds temperature dependent
+SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for
+symmetrical mismatches, e.g. rAGdTG and rGGdCG. These values have been used in
+place of the values obtained by fitting in the final RNA/DNA SEP matrix.
+
