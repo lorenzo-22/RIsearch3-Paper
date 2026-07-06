@@ -99,9 +99,8 @@ The energy model is unchanged, so predicted hybridisation energies match the
 original's.
 
 On equivalent inputs, RIsearch is $2$--$3\times$ faster than RIsearch2
-(Supplementary Figure~S1 and Supplementary Table~S1; further seed-scheme,
-extension, and output-compression benchmarks in Supplementary Figures~S2--S5,
-with the dataset and full protocol in Supplementary Methods). Its
+(Supplementary Figures~S1--S5; dataset, protocol, and full results in
+Supplementary Methods). Its
 suffix-array index can also be built in parallel across cores, whereas
 RIsearch2's libdivsufsort-based construction is single-threaded.
 
@@ -214,7 +213,7 @@ workers---runs $\sim$34\% faster than the legacy \texttt{RNAplfold} script
 (8\,h\,45\,m vs.\ 13\,h\,12\,m) and writes profiles $\sim$42\% smaller on disk
 (105\,GB vs.\ 180\,GB), at the cost of higher but still modest peak memory
 ($\sim$3.6\,GB vs.\ $\sim$309\,MB; Supplementary Methods and Supplementary
-Table~S2).
+Table~S1).
 
 % =============================================================
 %  FINAL REMARKS

@@ -10,22 +10,52 @@
 \setcounter{section}{0}
 \renewcommand{\thesection}{S\arabic{section}}
 
-\section*{Supplementary Data}
+\section*{Supplementary Methods}
 
 \subsection*{RIsearch core search benchmark}
 
 RIsearch reimplements the seed-and-extend search of
 RIsearch2~\citep{alkan2017risearch2} in Rust. To quantify the resulting
 speed-up, both tools were benchmarked on a common workload: 63 siRNA guide
-sequences searched against human chromosome-X cDNA targets (Ensembl transcripts
-$\geq 80$\,nt), on an AMD EPYC~9554 server using 32 threads. Both tools were
-supplied with pre-built indexes and identical search parameters---seed scheme,
-energy threshold ($-10$\,kcal\,mol$^{-1}$), extension length, mismatch count and
-output format---so that only search time is compared and index construction is
-excluded. Wall-clock time was recorded with Hyperfine (one warm-up plus three
-timed runs, output cleared before each run). In all panels the Rust
-implementation is labelled \texttt{RIsearch\_RS}; the full commands and parameter
-grid are given in the Supplementary Methods.
+sequences searched against a chromosome-X target set of Ensembl human cDNA
+transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server. Both tools
+were supplied with pre-built indexes of the same target and run with identical
+search parameters, so that only search time is compared and index construction
+is excluded. Input files were staged on local disk to remove NFS latency, and
+wall-clock time was recorded with Hyperfine (one warm-up run followed by three
+timed runs, with the output directory cleared before each run). In all figures
+the Rust implementation is labelled \texttt{RIsearch\_RS}.
+
+The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and
+the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt;
+mismatch counts 0--3; and output formats \texttt{p1}--\texttt{p4}. Thread scaling
+was measured for seed scheme~6 at 1, 2, 4, 8, 16 and 32 threads. The energy
+threshold was $-10$\,kcal\,mol$^{-1}$ for extension $\geq 5$\,nt and $0$ for
+seed-only runs (extension $<5$\,nt, for which no dynamic-programming extension is
+performed). The two search commands, shown for seed scheme 2:7/5 with extension
+20\,nt on 32 threads, were:
+
+\begin{verbatim}
+# RIsearch2 (C)
+risearch2.x -q sirnas.fa -i chrX.pksuf -s 2:7/5 \
+    -e -10 -l 20 --threads 32 -z t99 -p
+
+# RIsearch (Rust; RIsearch_RS)
+risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
+    --energy -10 --extension 20 --threads 32 --matrix t99 \
+    --no-dedup -p 1 --multifile --compress gzip --output results_dir
+\end{verbatim}
+
+With matched gzip-compressed output, RIsearch runs about twice as fast as
+RIsearch2 on the canonical seed-and-extend schemes
+(Fig.~\ref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$),
+the advantage growing with extension length as the Gotoh dynamic-programming
+stage comes to dominate runtime (Fig.~\ref{fig:risearch-extension}) and holding
+across thread counts (Fig.~\ref{fig:risearch-scaling}). RIsearch additionally
+offers zstd-compressed output, which RIsearch2 lacks; substituting zstd
+(Figs.~\ref{fig:risearch-compression}, \ref{fig:risearch-compression-scaling})
+widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend
+workloads and up to ${\sim}3\times$ on seed-only searches.
 
 % ----- Figure S1 -----
 \begin{figure}[ht]
@@ -83,9 +113,9 @@ grid are given in the Supplementary Methods.
   gzip. zstd trims up to ${\sim}25\%$ of wall-clock time (relative time
   $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2
   offers only gzip-style output, so the head-to-head comparisons in
-  Fig.~\ref{fig:risearch-comparison} use gzip for both tools, and RIsearch's
-  zstd advantage over RIsearch2 (Table~\ref{tab:risearch-speedup}) is reported
-  separately.%
+  Fig.~\ref{fig:risearch-comparison} use gzip for both tools; with zstd,
+  RIsearch's advantage over RIsearch2 widens further (quantified in the text
+  above).%
 }
 \label{fig:risearch-compression}
 \end{figure}
@@ -101,106 +131,6 @@ grid are given in the Supplementary Methods.
 }
 \label{fig:risearch-compression-scaling}
 \end{figure}
-
-% ----- Table S1 -----
-\begin{table}[ht]
-\centering
-\caption{Speed-up of RIsearch over RIsearch2 on the chromosome-X workload
-  (32 threads). Ranges span the seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7,
-  1:12/8, 4, 5 and 6; ``seed-and-extend'' aggregates extension lengths
-  10--20\,nt and ``seed-only'' uses extension~0. Matched rows use gzip output
-  for both tools; because RIsearch2 has no zstd mode, the zstd rows compare
-  RIsearch (zstd) against RIsearch2 (gzip).}
-\label{tab:risearch-speedup}
-\small
-\begin{tabular}{lcc}
-\hline
-Comparison (32 threads) & Median speed-up & Range \\
-\hline
-Seed-and-extend, matched gzip output    & $1.9\times$ & $1.5$--$2.3\times$ \\
-Seed-and-extend, RIsearch zstd output   & $2.3\times$ & $1.7$--$2.6\times$ \\
-Seed-only, RIsearch zstd output         & $2.9\times$ & $2.1$--$3.3\times$ \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection*{RIOT pipeline benchmark}
-
-% ----- Figure S6: RIOT vs legacy pipeline -----
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\linewidth]{figures/pipeline_comparison}
-\caption{%
-  \textbf{Wall-clock time and peak memory of RIOT versus the legacy pipeline
-  across batch sizes.}
-  Each box spans the interquartile range of five independent randomised trials;
-  the central line marks the median; whiskers extend to the full range.
-  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
-  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
-  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
-  library~\citep{huesken2005design}.
-  RIOT achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
-  Python~2.7 implementation.
-  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
-  by \texttt{/usr/bin/time -v}.
-  RIOT plateaus at $\approx$7\,GB regardless of batch size;
-  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
-  size increases.
-  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
-  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
-  predictions were provided as input so that search time is excluded from
-  both measurements (see Supplementary Methods).%
-}
-\label{fig:pipeline}
-\end{figure}
-
-% =============================================================
-%  SUPPLEMENTARY METHODS
-% =============================================================
-\section*{Supplementary Methods}
-
-\subsection*{RIsearch core search benchmark}
-
-The RIsearch/RIsearch2 search benchmark
-(Supplementary Figures~\ref{fig:risearch-comparison}--\ref{fig:risearch-compression-scaling},
-Table~\ref{tab:risearch-speedup}) used 63 siRNA guide sequences as queries
-against a chromosome-X target set of Ensembl human cDNA transcripts filtered to
-$\geq 80$\,nt. All runs were executed on an AMD EPYC~9554 server (32 threads);
-input files were staged on local disk to remove NFS latency, and timing was
-collected with Hyperfine (one warm-up run followed by three timed runs, with the
-output directory cleared before each run). To isolate search performance, each
-tool was given a pre-built index of the same target and run with matched
-parameters; index construction was excluded from all timings.
-
-The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and
-the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt;
-mismatch counts 0--3; output formats \texttt{p1}--\texttt{p4}; and, for RIsearch
-only, gzip and zstd output compression. Thread scaling was measured for seed
-scheme~6 at 1, 2, 4, 8, 16 and 32 threads. The energy threshold was
-$-10$\,kcal\,mol$^{-1}$ for extension $\geq 5$\,nt and $0$ for seed-only runs
-(extension $<5$\,nt, for which no dynamic-programming extension is performed).
-
-The two search commands, shown for seed scheme 2:7/5 with extension 20\,nt on
-32 threads, were:
-
-\begin{verbatim}
-# RIsearch2 (C)
-risearch2.x -q sirnas.fa -i chrX.pksuf -s 2:7/5 \
-    -e -10 -l 20 --threads 32 -z t99 -p
-
-# RIsearch (Rust; RIsearch_RS)
-risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
-    --energy -10 --extension 20 --threads 32 --matrix t99 \
-    --no-dedup -p 1 --multifile --compress gzip --output results_dir
-\end{verbatim}
-
-\noindent Both tools used the \texttt{t99} energy matrix and produced binding-site
-output. Matched head-to-head comparisons used \texttt{-{}-compress gzip}; the
-zstd comparisons (Figs.~\ref{fig:risearch-compression},
-\ref{fig:risearch-compression-scaling}) substitute \texttt{-{}-compress zstd}.
-Because RIsearch2 emits only gzip-style output, the RIsearch-versus-RIsearch2
-figures compare gzip output for both tools; with RIsearch's faster zstd output
-the advantage widens further (Table~\ref{tab:risearch-speedup}).
 
 \subsection*{RIOT pipeline stages and partition-function model}
 
@@ -428,6 +358,34 @@ rather than run-to-run measurement noise alone.
 Pre-computed RIsearch2 binding-site prediction files were provided as
 input to both pipelines, so that search time is excluded from all
 measurements.
+
+% ----- Figure S6: RIOT vs legacy pipeline -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\caption{%
+  \textbf{Wall-clock time and peak memory of RIOT versus the legacy pipeline
+  across batch sizes.}
+  Each box spans the interquartile range of five independent randomised trials;
+  the central line marks the median; whiskers extend to the full range.
+  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
+  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
+  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
+  library~\citep{huesken2005design}.
+  RIOT achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  Python~2.7 implementation.
+  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
+  by \texttt{/usr/bin/time -v}.
+  RIOT plateaus at $\approx$7\,GB regardless of batch size;
+  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
+  size increases.
+  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
+  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
+  predictions were provided as input so that search time is excluded from
+  both measurements.%
+}
+\label{fig:pipeline}
+\end{figure}
 
 \subsection*{Accessibility pre-computation}
 
