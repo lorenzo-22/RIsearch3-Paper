@@ -12,7 +12,121 @@
 
 \section*{Supplementary Data}
 
+\subsection*{RIsearch core search benchmark}
+
+RIsearch reimplements the seed-and-extend search of
+RIsearch2~\citep{alkan2017risearch2} in Rust. To quantify the resulting
+speed-up, both tools were benchmarked on a common workload: 63 siRNA guide
+sequences searched against human chromosome-X cDNA targets (Ensembl transcripts
+$\geq 80$\,nt), on an AMD EPYC~9554 server using 32 threads. Both tools were
+supplied with pre-built indexes and identical search parameters---seed scheme,
+energy threshold ($-10$\,kcal\,mol$^{-1}$), extension length, mismatch count and
+output format---so that only search time is compared and index construction is
+excluded. Wall-clock time was recorded with Hyperfine (one warm-up plus three
+timed runs, output cleared before each run). In all panels the Rust
+implementation is labelled \texttt{RIsearch\_RS}; the full commands and parameter
+grid are given in the Supplementary Methods.
+
 % ----- Figure S1 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/risearch_comparison_main}
+\caption{%
+  \textbf{Per-configuration search time of RIsearch versus RIsearch2.}
+  Wall-clock time at 32 threads with extension length 20\,nt and matched
+  gzip-compressed output, across seed schemes, output formats
+  (\texttt{fmt\_p1}--\texttt{p4}) and mismatch counts (\texttt{m1}--\texttt{m3}).
+  Numbers above each bar pair give RIsearch's time relative to RIsearch2
+  (lower is faster). On the canonical seed-and-extend schemes RIsearch is
+  roughly twice as fast (relative time $0.44$--$0.53$); the margin narrows for
+  long exact-match singleton seeds (12, 16, 21), whose sub-second runtimes are
+  dominated by fixed start-up rather than by search.%
+}
+\label{fig:risearch-comparison}
+\end{figure}
+
+% ----- Figure S2 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_tools}
+\caption{%
+  \textbf{Thread scaling of RIsearch versus RIsearch2} (seed scheme~6,
+  extension 20\,nt). RIsearch is faster at every thread count, from
+  $1.7\times$ single-threaded (RIsearch2 188\,s vs.\ RIsearch 110\,s) to
+  $2.1\times$ at 32 threads (17.2\,s vs.\ 8.3\,s). Both tools scale
+  near-linearly up to 16 threads.%
+}
+\label{fig:risearch-scaling}
+\end{figure}
+
+% ----- Figure S3 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/risearch_extension_sweep}
+\caption{%
+  \textbf{Effect of extension length on search time} (0--20\,nt, 32 threads,
+  matched gzip output). Numbers above bars give RIsearch's time relative to
+  RIsearch2. RIsearch's advantage grows with extension length as the Gotoh
+  dynamic-programming stage comes to dominate runtime; at extension~0
+  (seed matching only) the two tools are closer.%
+}
+\label{fig:risearch-extension}
+\end{figure}
+
+% ----- Figure S4 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/risearch_compression_gzip_vs_zstd}
+\caption{%
+  \textbf{Output-compression modes within RIsearch}: zstd versus gzip
+  (32 threads, extension 20\,nt). Numbers above bars give zstd time relative to
+  gzip. zstd trims up to ${\sim}25\%$ of wall-clock time (relative time
+  $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2
+  offers only gzip-style output, so the head-to-head comparisons in
+  Fig.~\ref{fig:risearch-comparison} use gzip for both tools, and RIsearch's
+  zstd advantage over RIsearch2 (Table~\ref{tab:risearch-speedup}) is reported
+  separately.%
+}
+\label{fig:risearch-compression}
+\end{figure}
+
+% ----- Figure S5 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_compression}
+\caption{%
+  \textbf{Thread scaling of RIsearch output compression} (seed~6,
+  extension 20\,nt): zstd is consistently faster than gzip, e.g.\ 6.7\,s
+  vs.\ 8.3\,s at 32 threads.%
+}
+\label{fig:risearch-compression-scaling}
+\end{figure}
+
+% ----- Table S1 -----
+\begin{table}[ht]
+\centering
+\caption{Speed-up of RIsearch over RIsearch2 on the chromosome-X workload
+  (32 threads). Ranges span the seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7,
+  1:12/8, 4, 5 and 6; ``seed-and-extend'' aggregates extension lengths
+  10--20\,nt and ``seed-only'' uses extension~0. Matched rows use gzip output
+  for both tools; because RIsearch2 has no zstd mode, the zstd rows compare
+  RIsearch (zstd) against RIsearch2 (gzip).}
+\label{tab:risearch-speedup}
+\small
+\begin{tabular}{lcc}
+\hline
+Comparison (32 threads) & Median speed-up & Range \\
+\hline
+Seed-and-extend, matched gzip output    & $1.9\times$ & $1.5$--$2.3\times$ \\
+Seed-and-extend, RIsearch zstd output   & $2.3\times$ & $1.7$--$2.6\times$ \\
+Seed-only, RIsearch zstd output         & $2.9\times$ & $2.1$--$3.3\times$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection*{RIOT pipeline benchmark}
+
+% ----- Figure S6: RIOT vs legacy pipeline -----
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/pipeline_comparison}
@@ -37,13 +151,56 @@
   predictions were provided as input so that search time is excluded from
   both measurements (see Supplementary Methods).%
 }
-\label{fig:S1}
+\label{fig:pipeline}
 \end{figure}
 
 % =============================================================
 %  SUPPLEMENTARY METHODS
 % =============================================================
 \section*{Supplementary Methods}
+
+\subsection*{RIsearch core search benchmark}
+
+The RIsearch/RIsearch2 search benchmark
+(Supplementary Figures~\ref{fig:risearch-comparison}--\ref{fig:risearch-compression-scaling},
+Table~\ref{tab:risearch-speedup}) used 63 siRNA guide sequences as queries
+against a chromosome-X target set of Ensembl human cDNA transcripts filtered to
+$\geq 80$\,nt. All runs were executed on an AMD EPYC~9554 server (32 threads);
+input files were staged on local disk to remove NFS latency, and timing was
+collected with Hyperfine (one warm-up run followed by three timed runs, with the
+output directory cleared before each run). To isolate search performance, each
+tool was given a pre-built index of the same target and run with matched
+parameters; index construction was excluded from all timings.
+
+The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and
+the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt;
+mismatch counts 0--3; output formats \texttt{p1}--\texttt{p4}; and, for RIsearch
+only, gzip and zstd output compression. Thread scaling was measured for seed
+scheme~6 at 1, 2, 4, 8, 16 and 32 threads. The energy threshold was
+$-10$\,kcal\,mol$^{-1}$ for extension $\geq 5$\,nt and $0$ for seed-only runs
+(extension $<5$\,nt, for which no dynamic-programming extension is performed).
+
+The two search commands, shown for seed scheme 2:7/5 with extension 20\,nt on
+32 threads, were:
+
+\begin{verbatim}
+# RIsearch2 (C)
+risearch2.x -q sirnas.fa -i chrX.pksuf -s 2:7/5 \
+    -e -10 -l 20 --threads 32 -z t99 -p
+
+# RIsearch (Rust; RIsearch_RS)
+risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
+    --energy -10 --extension 20 --threads 32 --matrix t99 \
+    --no-dedup -p 1 --multifile --compress gzip --output results_dir
+\end{verbatim}
+
+\noindent Both tools used the \texttt{t99} energy matrix and produced binding-site
+output. Matched head-to-head comparisons used \texttt{-{}-compress gzip}; the
+zstd comparisons (Figs.~\ref{fig:risearch-compression},
+\ref{fig:risearch-compression-scaling}) substitute \texttt{-{}-compress zstd}.
+Because RIsearch2 emits only gzip-style output, the RIsearch-versus-RIsearch2
+figures compare gzip output for both tools; with RIsearch's faster zstd output
+the advantage widens further (Table~\ref{tab:risearch-speedup}).
 
 \subsection*{RIOT pipeline stages and partition-function model}
 
