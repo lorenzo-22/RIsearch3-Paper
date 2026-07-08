@@ -407,16 +407,33 @@ Arrow reads.
 Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$,
 64 workers on the AMD EPYC~9554 server) was compared between the legacy script
 (driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand
-(Table~\ref{tab:acc-bench}). RIOT completes the full-genome
-fold $\sim$34\% faster (8\,h\,45\,m vs.\ 13\,h\,12\,m) and stores the resulting
-profiles in $\sim$42\% less disk space (105\,GB vs.\ 180\,GB), the latter
-because each chromosome is written as a single two-strand compressed Parquet
-file rather than two uncompressed binary files. The trade-off is higher peak
-resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the
-ViennaRNA Python API holds per-chromosome probability matrices in memory rather
-than streaming them through a subprocess; both figures are small relative to
-typical server memory, and this cost is incurred only once per genome and
+(Fig.~\ref{fig:accessibility}, Table~\ref{tab:acc-bench}). RIOT completes the
+full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the
+resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the
+latter because each chromosome is written as a single two-strand compressed
+Parquet file rather than two uncompressed binary files. The trade-off is higher
+peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as
+the ViennaRNA Python API holds per-chromosome probability matrices in memory
+rather than streaming them through a subprocess; both figures are small relative
+to typical server memory, and this cost is incurred only once per genome and
 folding condition.
+
+% ----- Figure S7: accessibility pre-computation -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/accessibility_benchmark}
+\caption{%
+  \textbf{Full-genome accessibility pre-computation: legacy script versus
+  RIOT's \texttt{accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$,
+  64 workers). \textbf{(A)}~Wall-clock time: RIOT folds the whole genome in
+  8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt{RNAplfold} script
+  ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
+  111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
+  single compressed two-strand Parquet file rather than two uncompressed binary
+  files. Peak memory (not shown) is given in Table~\ref{tab:acc-bench}.%
+}
+\label{fig:accessibility}
+\end{figure}
 
 \begin{table}[ht]
 \centering
@@ -429,9 +446,9 @@ RIOT's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
 \hline
 Metric & Legacy & New \\
 \hline
-Wall-clock time      & 13\,h\,12\,m & 8\,h\,45\,m \\
+Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
 Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
-On-disk profile size & 180\,GB      & 105\,GB \\
+On-disk profile size & 192.6\,GB    & 111.8\,GB \\
 Files per chromosome & 2            & 1 \\
 \hline
 \end{tabular}
