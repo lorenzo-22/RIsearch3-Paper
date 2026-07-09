@@ -5,43 +5,132 @@
 % =============================================================
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{table}{0}
+\renewcommand{\thetable}{S\arabic{table}}
 \setcounter{section}{0}
 \renewcommand{\thesection}{S\arabic{section}}
 
-\section*{Supplementary Data}
+\section*{Supplementary Methods}
+
+\subsection*{RIsearch core search benchmark}
+
+RIsearch reimplements the seed-and-extend search of
+RIsearch2~\citep{alkan2017risearch2} in Rust. To quantify the resulting
+speed-up, both tools were benchmarked on a common workload: 63 siRNA guide
+sequences searched against a chromosome-X target set of Ensembl human cDNA
+transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server. Both tools
+were supplied with pre-built indexes of the same target and run with identical
+search parameters, so that only search time is compared and index construction
+is excluded. Input files were staged on local disk to remove NFS latency, and
+wall-clock time was recorded with Hyperfine (one warm-up run followed by three
+timed runs, with the output directory cleared before each run). In all figures
+the Rust implementation is labelled \texttt{RIsearch\_RS}.
+
+The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and
+the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt;
+mismatch counts 0--3; and output formats \texttt{p1}--\texttt{p4}. Thread scaling
+was measured for seed scheme~6 at 1, 2, 4, 8, 16 and 32 threads. The energy
+threshold was $-10$\,kcal\,mol$^{-1}$ for extension $\geq 5$\,nt and $0$ for
+seed-only runs (extension $<5$\,nt, for which no dynamic-programming extension is
+performed). The two search commands, shown for seed scheme 2:7/5 with extension
+20\,nt on 32 threads, were:
+
+\begin{verbatim}
+# RIsearch2 (C)
+risearch2.x -q sirnas.fa -i chrX.pksuf -s 2:7/5 \
+    -e -10 -l 20 --threads 32 -z t99 -p
+
+# RIsearch (Rust; RIsearch_RS)
+risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
+    --energy -10 --extension 20 --threads 32 --matrix t99 \
+    --no-dedup -p 1 --multifile --compress gzip --output results_dir
+\end{verbatim}
+
+With matched gzip-compressed output, RIsearch runs about twice as fast as
+RIsearch2 on the canonical seed-and-extend schemes
+(Fig.~\ref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$),
+the advantage growing with extension length as the Gotoh dynamic-programming
+stage comes to dominate runtime (Fig.~\ref{fig:risearch-extension}) and holding
+across thread counts (Fig.~\ref{fig:risearch-scaling}). RIsearch additionally
+offers zstd-compressed output, which RIsearch2 lacks; substituting zstd
+(Figs.~\ref{fig:risearch-compression}, \ref{fig:risearch-compression-scaling})
+widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend
+workloads and up to ${\sim}3\times$ on seed-only searches.
 
 % ----- Figure S1 -----
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\includegraphics[width=\linewidth]{figures/risearch_comparison_main}
 \caption{%
-  \textbf{Wall-clock time and peak memory of RIOT versus the legacy pipeline
-  across batch sizes.}
-  Each box spans the interquartile range of five independent randomised trials;
-  the central line marks the median; whiskers extend to the full range.
-  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
-  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
-  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
-  library~\citep{huesken2005design}.
-  RIOT achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
-  Python~2.7 implementation.
-  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
-  by \texttt{/usr/bin/time -v}.
-  RIOT plateaus at $\approx$7\,GB regardless of batch size;
-  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
-  size increases.
-  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
-  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
-  predictions were provided as input so that search time is excluded from
-  both measurements (see Supplementary Methods).%
+  \textbf{Per-configuration search time of RIsearch versus RIsearch2.}
+  Wall-clock time at 32 threads with extension length 20\,nt and matched
+  gzip-compressed output, across seed schemes, output formats
+  (\texttt{fmt\_p1}--\texttt{p4}) and mismatch counts (\texttt{m1}--\texttt{m3}).
+  Numbers above each bar pair give RIsearch's time relative to RIsearch2
+  (lower is faster). On the canonical seed-and-extend schemes RIsearch is
+  roughly twice as fast (relative time $0.44$--$0.53$); the margin narrows for
+  long exact-match singleton seeds (12, 16, 21), whose sub-second runtimes are
+  dominated by fixed start-up rather than by search.%
 }
-\label{fig:S1}
+\label{fig:risearch-comparison}
 \end{figure}
 
-% =============================================================
-%  SUPPLEMENTARY METHODS
-% =============================================================
-\section*{Supplementary Methods}
+% ----- Figure S2 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_tools}
+\caption{%
+  \textbf{Thread scaling of RIsearch versus RIsearch2} (seed scheme~6,
+  extension 20\,nt). RIsearch is faster at every thread count, from
+  $1.7\times$ single-threaded (RIsearch2 188\,s vs.\ RIsearch 110\,s) to
+  $2.1\times$ at 32 threads (17.2\,s vs.\ 8.3\,s). Both tools scale
+  near-linearly up to 16 threads.%
+}
+\label{fig:risearch-scaling}
+\end{figure}
+
+% ----- Figure S3 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/risearch_extension_sweep}
+\caption{%
+  \textbf{Effect of extension length on search time} (0--20\,nt, 32 threads,
+  matched gzip output). Numbers above bars give RIsearch's time relative to
+  RIsearch2. RIsearch's advantage grows with extension length as the Gotoh
+  dynamic-programming stage comes to dominate runtime; at extension~0
+  (seed matching only) the two tools are closer.%
+}
+\label{fig:risearch-extension}
+\end{figure}
+
+% ----- Figure S4 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/risearch_compression_gzip_vs_zstd}
+\caption{%
+  \textbf{Output-compression modes within RIsearch}: zstd versus gzip
+  (32 threads, extension 20\,nt). Numbers above bars give zstd time relative to
+  gzip. zstd trims up to ${\sim}25\%$ of wall-clock time (relative time
+  $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2
+  offers only gzip-style output, so the head-to-head comparisons in
+  Fig.~\ref{fig:risearch-comparison} use gzip for both tools; with zstd,
+  RIsearch's advantage over RIsearch2 widens further (quantified in the text
+  above).%
+}
+\label{fig:risearch-compression}
+\end{figure}
+
+% ----- Figure S5 -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_compression}
+\caption{%
+  \textbf{Thread scaling of RIsearch output compression} (seed~6,
+  extension 20\,nt): zstd is consistently faster than gzip, e.g.\ 6.7\,s
+  vs.\ 8.3\,s at 32 threads.%
+}
+\label{fig:risearch-compression-scaling}
+\end{figure}
 
 \subsection*{RIOT pipeline stages and partition-function model}
 
@@ -270,6 +359,34 @@ Pre-computed RIsearch2 binding-site prediction files were provided as
 input to both pipelines, so that search time is excluded from all
 measurements.
 
+% ----- Figure S6: RIOT vs legacy pipeline -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\caption{%
+  \textbf{Wall-clock time and peak memory of RIOT versus the legacy pipeline
+  across batch sizes.}
+  Each box spans the interquartile range of five independent randomised trials;
+  the central line marks the median; whiskers extend to the full range.
+  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
+  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
+  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
+  library~\citep{huesken2005design}.
+  RIOT achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  Python~2.7 implementation.
+  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
+  by \texttt{/usr/bin/time -v}.
+  RIOT plateaus at $\approx$7\,GB regardless of batch size;
+  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
+  size increases.
+  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
+  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
+  predictions were provided as input so that search time is excluded from
+  both measurements.%
+}
+\label{fig:pipeline}
+\end{figure}
+
 \subsection*{Accessibility pre-computation}
 
 The legacy pipeline computed per-nucleotide RNA opening energies with a
@@ -290,16 +407,33 @@ Arrow reads.
 Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$,
 64 workers on the AMD EPYC~9554 server) was compared between the legacy script
 (driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand
-(Table~\ref{tab:acc-bench}). RIOT completes the full-genome
-fold $\sim$34\% faster (8\,h\,45\,m vs.\ 13\,h\,12\,m) and stores the resulting
-profiles in $\sim$42\% less disk space (105\,GB vs.\ 180\,GB), the latter
-because each chromosome is written as a single two-strand compressed Parquet
-file rather than two uncompressed binary files. The trade-off is higher peak
-resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the
-ViennaRNA Python API holds per-chromosome probability matrices in memory rather
-than streaming them through a subprocess; both figures are small relative to
-typical server memory, and this cost is incurred only once per genome and
+(Fig.~\ref{fig:accessibility}, Table~\ref{tab:acc-bench}). RIOT completes the
+full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the
+resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the
+latter because each chromosome is written as a single two-strand compressed
+Parquet file rather than two uncompressed binary files. The trade-off is higher
+peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as
+the ViennaRNA Python API holds per-chromosome probability matrices in memory
+rather than streaming them through a subprocess; both figures are small relative
+to typical server memory, and this cost is incurred only once per genome and
 folding condition.
+
+% ----- Figure S7: accessibility pre-computation -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/accessibility_benchmark}
+\caption{%
+  \textbf{Full-genome accessibility pre-computation: legacy script versus
+  RIOT's \texttt{accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$,
+  64 workers). \textbf{(A)}~Wall-clock time: RIOT folds the whole genome in
+  8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt{RNAplfold} script
+  ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
+  111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
+  single compressed two-strand Parquet file rather than two uncompressed binary
+  files. Peak memory (not shown) is given in Table~\ref{tab:acc-bench}.%
+}
+\label{fig:accessibility}
+\end{figure}
 
 \begin{table}[ht]
 \centering
@@ -312,10 +446,95 @@ RIOT's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
 \hline
 Metric & Legacy & New \\
 \hline
-Wall-clock time      & 13\,h\,12\,m & 8\,h\,45\,m \\
+Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
 Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
-On-disk profile size & 180\,GB      & 105\,GB \\
+On-disk profile size & 192.6\,GB    & 111.8\,GB \\
 Files per chromosome & 2            & 1 \\
 \hline
 \end{tabular}
 \end{table}
+\section{Temperature dependent energy parameters}\label{temperature-dependent-energy-parameters}
+Notation, N indicates an unknown nucleotide. In the stacking energies, the N is
+substituted with a nucleotide (ACGT/U) giving the stack the highest possible
+energy. \_ indicates gap, a missing nucleotide, at the corresponding position,
+that is a bulge on the strand opposite the gap.
+\begin{verbatim}
+RNA: rA,rC,rG,rU,rN,r\_
+DNA: dA,dC,dG,dT,dN,d\_
+
+RNA/RNA: 5'-AC-3' bound to 3'-UG-5': rACUG
+DNA/DNA: 5'-AC-3' bound to 3'-TG-5': dACTG
+RNA/DNA: 5'-rAC-3' bound to 3'-dTG-5': rACdUG
+\end{verbatim}
+
+The energy model of RIsearch is the sum of the energies of nucleotide stacks,
+where a stack is two nucleotides bound (aligned) to two nucleotides on the
+opposite strand or aligned to gaps on the opposite strand when the alignment
+contains bulges / gaps. A particular case is the stacks initiating or
+terminating the binding, which are written as, e.g. \_G\_C and G\_C\_,
+respectively. These stacks are not allowed in other places in the alignment.
+
+The binding energy matrices are derived from those in ViennaRNA\cite{ref4},
+which are again derived from the nearest neighbor energy model parameters from
+papers\cite{ref5,ref6,ref7,ref8,ref9,ref10,ref11,ref12} cited by ViennaRNA.
+\begin{verbatim}
+RNA/RNA: 2.6.3 RNAduplex
+
+DNA/DNA: 2.6.3 RNAduplex -P DNA
+
+RNA/DNA: 2.1.9h RNAduplex (in source code and binary only)
+\end{verbatim}
+
+The RNA/RNA and DNA/DNA matrices are implemented in all later versions of
+ViennaRNA. However, the RNA/DNA matrices are only found in version 2.1.9h,
+where they are the default in certain programs including RNAduplex. The first
+(target) sequence must be the RNA, and the second the DNA, and these should be
+entered with the corresponding alphabets, that is with U or T, respectively.
+
+When we allow GAPS along with the standard nucleotides, we have $5^4 = 625$ stacking energy parameters (SEP) we need to obtain values for in each of the four cases. However, not all SEPs are allowed, e.g. an alignment must start and end with a binding pair (\_G\_C is defined, but not \_G\_A) and a gap on both strands is not allowed. In addition, some SEPs are identical due to the nature of the underlying chemistry (rGCAU is the same as rUACG, but rGCdAT is not the same as rUAdCG) and some SEPs are linearly dependent due to the nature of the model (a gap opened must also be closed (an example gap opening could be rAAU\_ and a closing could be rAA\_U).
+
+The undefined SEPs are set to a large positive energy (+20.0 kcal/mol) in the energy matrices, and we enforce linear dependencies according to the rules below
+
+\begin{enumerate}
+\item A stack of nucleotides is, e.g. rACGU or rACdGT is written as $(\mathit{ijkl})$
+
+\item Nucleotide are considered pairing when one of AU, AT, CG, GU and GT
+
+\item If $i$ is paired but $j$ is not paired: $(\mathit{ijkl}) = (\mathit{jilk})$, e.g. rACdGG = rCAdGG
+
+\item For RNA/RNA and DNA/DNA $(\mathit{ijkl}) = (\mathit{lkji})$
+
+\item For unknown nucleotides (N) the maximum (worst) value is chosen amongst the possibilities for N. In this way we determine the $6^4 = 1296$ SEPs needed for RIsearch.
+\end{enumerate}
+
+These rules reduced the number of parameters to be determined from 625 to 266 for RNA/RNA and DNA/DNA and to 459 in RNA/DNA and removed the linear interdependency of the parameters. The actual number of SEPs to be determined is a little lower when illegal stacking values are removed.
+
+The SEPs were obtained by fitting energies and alignments from the respective RNA, DNA and hybrid modes of the RNAduplex according to the list above. To this end we constructed 4 times 50,000 alignments of the following types
+
+\begin{enumerate}
+\item Exact complimentary sequences
+
+\item GU internal size 1-4 and, terminal, size -4
+
+\item internal loops of size 1-4
+
+\item internal bulges of size 1-4
+\end{enumerate}
+
+In each case the sequences were otherwise random and constructed to be 10-20nt
+complimentary + variation 4nt + 10-20nt complimentary. The alignments obtained
+from RNAduplex were then parameterized according to the corresponding stacking
+base pairs and the SEPs were obtained by a linear regression fit of the
+RNAduplex energy. In cases where the alignments were not full length, the
+alignments and energies were discarded before fitting.
+
+The RNA/DNA parameters in both the previous versions of RIsearch and in the
+2.1.9h version of ViennaRNA were constructed from the Sugimoto 95
+paper\cite{ref13}, which only contains the SEPs for canonical basepair stacks
+like rACdTG. Missing values were obtained as the average of corresponding
+RNA/RNA and DNA/DNA SEP. However the RNA/DNA parameters have been improved upon
+in two papers\cite{ref14,ref15}, which respectively adds temperature dependent
+SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for
+symmetrical mismatches, e.g. rAGdTG and rGGdCG. These values have been used in
+place of the values obtained by fitting in the final RNA/DNA SEP matrix.
+
