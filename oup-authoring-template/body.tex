@@ -101,8 +101,9 @@ original's.
 On equivalent inputs, RIsearch is $2$--$3\times$ faster than RIsearch2
 (Supplementary Figures~S1--S5; dataset, protocol, and full results in
 Supplementary Methods). Its
-suffix-array index can also be built in parallel across cores, whereas
-RIsearch2's libdivsufsort-based construction is single-threaded.
+suffix-array index is also built in parallel across cores---about $2\times$
+faster than RIsearch2's single-threaded libdivsufsort construction on the hg38
+genome (Supplementary Figure~S6).
 
 % =============================================================
 %  PYTHON BINDINGS AND THERMODYNAMIC PARAMETERS
@@ -203,7 +204,7 @@ and benchmark protocol detailed in Supplementary Methods), RIOT completes the
 intersection, accessibility annotation, probability computation, and output
 stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 implementation across
 batch sizes of 500--2{,}000 siRNAs (five randomised trials per batch size;
-Supplementary Figure~S6). Peak memory plateaus at approximately 7\,GB regardless
+Supplementary Figure~S7). Peak memory plateaus at approximately 7\,GB regardless
 of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to
 $\sim$10\,GB as batch size increases (Supplementary Methods).
 
@@ -212,7 +213,7 @@ entire hg38 reference at $W{=}80$, $L{=}40$, $u{=}30$ with 64
 workers---runs $\sim$34\% faster than the legacy \texttt{RNAplfold} script
 (8\,h\,46\,m vs.\ 13\,h\,12\,m) and writes profiles $\sim$42\% smaller on disk
 (111.8\,GB vs.\ 192.6\,GB), at the cost of higher but still modest peak memory
-($\sim$3.6\,GB vs.\ $\sim$309\,MB; Supplementary Figure~S7 and Supplementary
+($\sim$3.6\,GB vs.\ $\sim$309\,MB; Supplementary Figure~S8 and Supplementary
 Table~S1).
 
 % =============================================================

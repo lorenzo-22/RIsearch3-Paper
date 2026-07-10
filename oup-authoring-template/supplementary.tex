@@ -132,6 +132,35 @@ workloads and up to ${\sim}3\times$ on seed-only searches.
 \label{fig:risearch-compression-scaling}
 \end{figure}
 
+\subsection*{Index construction}
+
+RIsearch builds its suffix-array index in parallel across cores with
+libsais~\citep{libsais}, whereas RIsearch2's libdivsufsort construction is
+single-threaded. Building the GRCh38/hg38 index was benchmarked against
+RIsearch2 with Hyperfine (Fig.~\ref{fig:indexing}). When the index is written to
+disk, RIsearch is already ${\sim}1.5\times$ faster single-threaded ($0.66\times$
+the RIsearch2 time) and ${\sim}2.2\times$ faster at 16 threads ($0.45\times$);
+when the index is instead kept in memory, the parallel suffix-array construction
+is up to ${\sim}5.6\times$ faster ($0.18\times$ at 16 threads), showing that disk
+I/O, not computation, dominates the write-to-disk case.
+
+% ----- Figure S6: index construction -----
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/index_comparison_disk_vs_shm}
+\caption{%
+  \textbf{Suffix-array index construction time for the GRCh38/hg38 genome:}
+  RIsearch2 (C, single-threaded) versus RIsearch (Rust) at 1, 8 and 16 threads,
+  each with and without writing the index to disk. Numbers above bars give the
+  time relative to the corresponding RIsearch2 baseline (lower is faster).
+  Writing to disk, RIsearch builds the index ${\sim}2.2\times$ faster at
+  16 threads ($0.45\times$); kept in memory, its parallel construction is up to
+  ${\sim}5.6\times$ faster ($0.18\times$), indicating that disk I/O dominates the
+  write-to-disk timing.%
+}
+\label{fig:indexing}
+\end{figure}
+
 \subsection*{RIOT pipeline stages and partition-function model}
 
 The four-stage model of \citet{alkan2017risearch2} is preserved.
