@@ -396,7 +396,7 @@ The energy model of RIsearch is the sum of the energies of nucleotide stacks, wh
 A particular case is the stacks initiating or terminating the binding, which are written as, e.g. \_G\_C and G\_C\_, respectively.
 These stacks are not allowed in other places in the alignment.
 
-The binding energy matrices are derived from those in ViennaRNA\cite{ref4}, which are again derived from the nearest neighbor energy model parameters from papers\cite{ref5,ref6,ref7,ref8,ref9,ref10,ref11,ref12} cited by ViennaRNA.
+The binding energy matrices are derived from those in ViennaRNA\cite{lorenz2011vienna}, which are again derived from the nearest neighbor energy model parameters from papers\cite{walter1994coaxial,turner1988rna,peritz1991thermodynamic,jaeger1989improved,he1991gu,turner2010nndb,mathews1999expanded,mathews2004incorporating} cited by ViennaRNA.
 \begin{verbatim}
 RNA/RNA: 2.6.3 RNAduplex
 
@@ -447,9 +447,9 @@ In each case the sequences were otherwise random and constructed to be 10-20nt c
 The alignments obtained from RNAduplex were then parameterized according to the corresponding stacking base pairs and the SEPs were obtained by a linear regression fit of the RNAduplex energy.
 In cases where the alignments were not full length, the alignments and energies were discarded before fitting.
 
-The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.9h version of ViennaRNA were constructed from the Sugimoto 95 paper\cite{ref13}, which only contains the SEPs for canonical basepair stacks like rACdTG.
+The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.9h version of ViennaRNA were constructed from the Sugimoto 95 paper\cite{sugimoto1995rnadna}, which only contains the SEPs for canonical basepair stacks like rACdTG.
 Missing values were obtained as the average of corresponding RNA/RNA and DNA/DNA SEP.
-However the RNA/DNA parameters have been improved upon in two papers\cite{ref14,ref15}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for symmetrical mismatches, e.g. rAGdTG and rGGdCG.
+However the RNA/DNA parameters have been improved upon in two papers\cite{sugimoto2000thermodynamics,watkins2011thermodynamic}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for symmetrical mismatches, e.g. rAGdTG and rGGdCG.
 These values have been used in place of the values obtained by fitting in the final RNA/DNA SEP matrix.
 
 \bibliographystyle{oup-abbrvnat}
