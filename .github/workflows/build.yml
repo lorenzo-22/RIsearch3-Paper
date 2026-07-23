@@ -1,0 +1,44 @@
+name: build
+
+# Compiles both PDFs on every push and PR, so a broken .tex (including commits
+# pushed through Overleaf's GitHub bridge) is caught server-side. Reuses the
+# pinned Tectonic from mise.toml -- same engine as local `mise run build`.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tectonic's Linux binary dynamically links fontconfig at runtime.
+      - name: Install runtime deps
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      # Reads mise.toml, installs the pinned Tectonic, and trusts the config.
+      - name: Install toolchain (Tectonic via mise)
+        uses: jdx/mise-action@v2
+
+      # Tectonic fetches TeX packages on first build; cache them across runs.
+      - name: Cache Tectonic package downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-${{ runner.os }}-${{ hashFiles('**/*.tex', 'reference.bib') }}
+          restore-keys: tectonic-${{ runner.os }}-
+
+      - name: Build PDFs
+        run: mise run build
+
+      - name: Upload PDFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuscript-pdfs
+          path: |
+            main.pdf
+            supplementary_main.pdf
+          if-no-files-found: error
