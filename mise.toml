@@ -1,0 +1,33 @@
+# Reproducible manuscript build.
+#
+# Pins the LaTeX engine (Tectonic) so `mise install && mise run build` produces
+# the PDFs on any machine, with no system TeX install and no manual package
+# management -- Tectonic fetches exactly the packages the sources request.
+#
+# This file and the LaTeX sources both live at the git root. Overleaf ignores
+# non-.tex files, so this is inert on the Overleaf side.
+#
+# First run on a new checkout:
+#   mise trust        # authorise this config
+#   mise install      # fetch pinned Tectonic
+#   mise run build    # -> oup-authoring-template/{main,supplementary_main}.pdf
+
+[tools]
+# Tag on the tectonic monorepo is "tectonic@<ver>"; github backend matches it.
+"github:tectonic-typesetting/tectonic" = "tectonic@0.16.9"
+
+[tasks.build]
+description = "Build both PDFs (main + supplementary)"
+depends = ["build-main", "build-supp"]
+
+[tasks.build-main]
+description = "Compile main.tex -> main.pdf"
+run = "tectonic -X compile main.tex"
+
+[tasks.build-supp]
+description = "Compile supplementary_main.tex -> supplementary_main.pdf"
+run = "tectonic -X compile supplementary_main.tex"
+
+[tasks.clean]
+description = "Remove built PDFs"
+run = "rm -f main.pdf supplementary_main.pdf"
