@@ -57,6 +57,5 @@ repository root.
 
 ## License
 
-The OUP authoring template (`oup-authoring-template.cls` and supporting files) is
+The OUP authoring template (`oup-authoring-template.cls` and `oup-abbrvnat.bst`) is
 © Oxford University Press, released under the LaTeX Project Public License v1.3+.
-See `README` and `manifest.txt` for the template bundle details.
