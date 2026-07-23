@@ -11,12 +11,14 @@
 
 \title[RIsearch]{RIsearch and RIOT: An integrated, high-performance framework for RNA–RNA interaction and siRNA off-target prediction}
 
-\author[1,$\ast$]{Lorenzo Favaro \ORCID{0000-0000-0000-0000}}
-% \author[1]{Co-Author Name}
+\author[1]{Stefano Roncelli \ORCID{0009-0001-4830-202X}}
+\author[1]{Lorenzo Favaro \ORCID{0009-0002-8879-0555}}
+\author[1]{Christian Anthon \ORCID{0000-0002-4336-1688}}
+\author[1,$\ast$]{Jan Gorodkin \ORCID{0000-0001-5823-4000}}
 
-\address[1]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \postcode{Postcode}, \state{State}, \country{Country}}}
+\address[1]{\orgdiv{Section for Health Data Science and AI, Department of Public Health}, \orgname{University of Copenhagen}, \orgaddress{\street{Øster Farimagsgade 5}, \postcode{1353}, \state{Copenhagen K}, \country{Denmark}}}
 
-\corresp[$\ast$]{Corresponding author. \href{mailto:lorenzo@rth.dk}{lorenzo@rth.dk}}
+\corresp[$\ast$]{Corresponding author. \href{mailto:gorodkin@sund.ku.dk}{gorodkin@sund.ku.dk}}
 
 \received{Date}{0}{Year}
 \revised{Date}{0}{Year}
@@ -30,7 +32,7 @@ RIsearch~(v3) is a Rust reimplementation of the RIsearch2 search algorithm with 
 RIsearch~(v3) is functionally equivalent to RIsearch2 while running 2--3$\times$ faster; RIOT installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
 \textbf{Availability and implementation:} RIsearch and RIOT are released under [LICENSE] at \href{https://github.com/}{GitHub URL}.
 The Rust binary installs via \texttt{cargo install risearch}; the Python packages are available on PyPI as \texttt{risearch} (search core) and \texttt{riot} (off-target pipeline).\\
-\textbf{Contact:} \href{mailto:lorenzo@rth.dk}{lorenzo@rth.dk}}
+\textbf{Contact:} \href{mailto:gorodkin@sund.ku.dk}{gorodkin@sund.ku.dk}}
 
 \keywords{RNA-RNA interaction, siRNA off-target, Rust, Python bindings, bioinformatics tooling}
 
