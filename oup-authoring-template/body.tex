@@ -86,7 +86,7 @@ The engine itself is modular and open source, and is covered by an automated tes
 \subsection*{Performance}
 
 On equivalent inputs, RIsearch is $2$--$3\times$ faster than RIsearch2 (Supplementary Figures~S1--S5; dataset, protocol, and full results in Supplementary Methods).
-Its suffix array is built in parallel across cores, whereas RIsearch2's libdivsufsort-based construction is single-threaded.
+Its suffix array is also built in parallel across cores, about $2\times$ faster than RIsearch2's single-threaded libdivsufsort construction on the hg38 genome (Supplementary Figure~S6).
 The on-disk index is memory-mapped and read without deserialisation, so a multi-gigabyte genome index is available immediately and shared across processes by the operating system, rather than read into memory on every run.
 
 % =============================================================
@@ -122,10 +122,10 @@ Built on the RIsearch core bindings (Section~\ref{subsec:pybindings}), RIOT thus
 
 \subsection*{Performance}
 
-Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of the genome-wide siRNA efficacy library of \citet{huesken2005design} searched against the GRCh38/hg38 reference genome and intersected against an H1299 RNA-seq expression profile (dataset, genome indexing, expression annotation, and benchmark protocol detailed in Supplementary Methods), RIOT completes the intersection, accessibility annotation, probability computation, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 implementation across batch sizes of 500--2{,}000 siRNAs (five randomised trials per batch size; Supplementary Figure~S6).
+Benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of the genome-wide siRNA efficacy library of \citet{huesken2005design} searched against the GRCh38/hg38 reference genome and intersected against an H1299 RNA-seq expression profile (dataset, genome indexing, expression annotation, and benchmark protocol detailed in Supplementary Methods), RIOT completes the intersection, accessibility annotation, probability computation, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 implementation across batch sizes of 500--2{,}000 siRNAs (five randomised trials per batch size; Supplementary Figure~S7).
 Peak memory plateaus at approximately 7\,GB regardless of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size increases (Supplementary Methods).
 
-Separately, the one-time genome-wide accessibility pre-computation---folding the entire hg38 reference at $W{=}80$, $L{=}40$, $u{=}30$ with 64 workers---runs $\sim$34\% faster than the legacy \texttt{RNAplfold} script (8\,h\,46\,m vs.\ 13\,h\,12\,m) and writes profiles $\sim$42\% smaller on disk (111.8\,GB vs.\ 192.6\,GB), at the cost of higher but still modest peak memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB; Supplementary Figure~S7 and Supplementary Table~S1).
+Separately, the one-time genome-wide accessibility pre-computation---folding the entire hg38 reference at $W{=}80$, $L{=}40$, $u{=}30$ with 64 workers---runs $\sim$34\% faster than the legacy \texttt{RNAplfold} script (8\,h\,46\,m vs.\ 13\,h\,12\,m) and writes profiles $\sim$42\% smaller on disk (111.8\,GB vs.\ 192.6\,GB), at the cost of higher but still modest peak memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB; Supplementary Figure~S8 and Supplementary Table~S1).
 
 % =============================================================
 %  FINAL REMARKS
