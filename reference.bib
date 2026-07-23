@@ -1,6 +1,9 @@
 % =============================================================
 %  References for "RIsearch and RIOT"
-%  Cited-only bibliography (pruned from the OUP template's demo .bib).
+%  Cited-only bibliography. Metadata verified against Crossref
+%  (authors, title, volume/issue/pages, year, DOI).
+%  NAR database/advance-access entries use the print volume year
+%  (Turner&Mathews vol.38 = 2010; Watkins vol.39 = 2011).
 % =============================================================
 
 % ---- Tools and algorithms ----------------------------------
@@ -35,13 +38,20 @@
   number = {3},
   pages = {705--708},
   year = {1982},
-  publisher = {Elsevier},
+  doi = {10.1016/0022-2836(82)90398-9},
 }
 
 @misc{libsais,
   author = {Grebnov, Ilya},
   title = {{libsais}: linear-time suffix array, {LCP} array and {Burrows--Wheeler} transform construction},
   howpublished = {\url{https://github.com/IlyaGrebnov/libsais}},
+  note = {Accessed 2026},
+}
+
+@misc{libdivsufsort,
+  author = {Mori, Yuta},
+  title = {{libdivsufsort}: a lightweight suffix-array construction library},
+  howpublished = {\url{https://github.com/y-256/libdivsufsort}},
   note = {Accessed 2026},
 }
 
@@ -67,8 +77,49 @@
   doi = {10.1093/bioinformatics/btl647},
 }
 
+@article{quinlan2010bedtools,
+  author = {Quinlan, Aaron R. and Hall, Ira M.},
+  title = {{BEDTools}: a flexible suite of utilities for comparing genomic features},
+  journal = {Bioinformatics},
+  volume = {26},
+  number = {6},
+  pages = {841--842},
+  year = {2010},
+  doi = {10.1093/bioinformatics/btq033},
+}
+
+@inproceedings{yoo2003slurm,
+  author = {Yoo, Andy B. and Jette, Morris A. and Grondona, Mark},
+  title = {{SLURM}: Simple {Linux} Utility for Resource Management},
+  booktitle = {Job Scheduling Strategies for Parallel Processing ({JSSPP} 2003)},
+  series = {Lecture Notes in Computer Science},
+  volume = {2862},
+  pages = {44--60},
+  year = {2003},
+  publisher = {Springer},
+  doi = {10.1007/10968987_3},
+}
+
+@misc{polars,
+  author = {{The Polars Development Team}},
+  title = {{Polars}: a fast {DataFrame} library for {Rust} and {Python}},
+  howpublished = {\url{https://github.com/pola-rs/polars}},
+  note = {Accessed 2026},
+}
+
+@article{schneider2017grch38,
+  author = {Schneider, Valerie A. and Graves-Lindsay, Tina and Howe, Kerstin and Bouk, Nathan and Chen, Hsiu-Chuan and Kitts, Paul A. and Murphy, Terence D. and Pruitt, Kim D. and Thibaud-Nissen, Fran{\c{c}}oise and Albracht, Derek and Fulton, Robert S. and Kremitzki, Milinn and Magrini, Vincent and Markovic, Chris and McGrath, Sean and Steinberg, Karyn Meltz and Auger, Kate and Chow, William and Collins, Joanna and Harden, Glenn and Hubbard, Timothy and Pelan, Sarah and Simpson, Jared T. and Threadgold, Glen and Torrance, James and Wood, Jonathan M. and Clarke, Laura and Koren, Sergey and Boitano, Matthew and Peluso, Paul and Li, Heng and Chin, Chen-Shan and Phillippy, Adam M. and Durbin, Richard and Wilson, Richard K. and Flicek, Paul and Eichler, Evan E. and Church, Deanna M.},
+  title = {Evaluation of {GRCh38} and de novo haploid genome assemblies demonstrates the enduring quality of the reference assembly},
+  journal = {Genome Research},
+  volume = {27},
+  number = {5},
+  pages = {849--864},
+  year = {2017},
+  doi = {10.1101/gr.213611.116},
+}
+
 @article{huesken2005design,
-  author = {H{\"u}sken, Dieter and Teisan, Jorge and Lichtner, Miriam and Blochinger, Christoph and Naujoks, Torsten and Paus, Wilhelm and Sch{\"a}rfke, Beate and Schoone, Elmar and Bauernfeind, Andreas and Gimenez-Adan, Elena and others},
+  author = {Huesken, Dieter and Lange, Joerg and Mickanin, Craig and Weiler, Jan and Asselbergs, Fred and Warner, Justin and Meloon, Brian and Engel, Sharon and Rosenberg, Avi and Cohen, Dalia and Labow, Mark and Reinhardt, Mischa and Natt, Fran{\c{c}}ois and Hall, Jonathan},
   title = {Design of a genome-wide {siRNA} library using an artificial neural network},
   journal = {Nature Biotechnology},
   volume = {23},
@@ -81,12 +132,14 @@
 % ---- Nearest-neighbour energy model parameters -------------
 
 @article{walter1994coaxial,
-  author = {Walter, A. E. and others},
-  title = {Coaxial stacking of helices enhances binding of oligoribonucleotides and improves predictions of {RNA} folding},
+  author = {Walter, A. E. and Turner, D. H. and Kim, J. and Lyttle, M. H. and M{\"u}ller, P. and Mathews, D. H. and Zuker, M.},
+  title = {Coaxial stacking of helixes enhances binding of oligoribonucleotides and improves predictions of {RNA} folding},
   journal = {Proceedings of the National Academy of Sciences USA},
   volume = {91},
+  number = {20},
   pages = {9218--9222},
   year = {1994},
+  doi = {10.1073/pnas.91.20.9218},
 }
 
 @article{turner1988rna,
@@ -94,17 +147,21 @@
   title = {{RNA} Structure Prediction},
   journal = {Annual Review of Biophysics and Biophysical Chemistry},
   volume = {17},
+  number = {1},
   pages = {167--192},
   year = {1988},
+  doi = {10.1146/annurev.bb.17.060188.001123},
 }
 
 @article{peritz1991thermodynamic,
-  author = {Peritz, A. E. and Kierzek, R. and Sugimoto, N. and Turner, D. H.},
+  author = {Peritz, Adam E. and Kierzek, Ryszard and Sugimoto, Naoki and Turner, Douglas H.},
   title = {Thermodynamic study of internal loops in oligoribonucleotides: symmetric loops are more stable than asymmetric loops},
   journal = {Biochemistry},
   volume = {30},
+  number = {26},
   pages = {6428--6436},
   year = {1991},
+  doi = {10.1021/bi00240a013},
 }
 
 @article{jaeger1989improved,
@@ -112,69 +169,85 @@
   title = {Improved predictions of secondary structures for {RNA}},
   journal = {Proceedings of the National Academy of Sciences USA},
   volume = {86},
+  number = {20},
   pages = {7706--7710},
   year = {1989},
+  doi = {10.1073/pnas.86.20.7706},
 }
 
 @article{he1991gu,
-  author = {He, L. and Kierzek, R. and SantaLucia, Jr., J. and Walter, A. E. and Turner, D. H.},
-  title = {Nearest-Neighbor Parameters for {GU} Mismatches: 5'GU3'/3'UG5' is destabilizing in several contexts but stabilizing in {GGUC/CUGG}},
+  author = {He, Liyan and Kierzek, Ryszard and SantaLucia, Jr., John and Walter, Amy E. and Turner, Douglas H.},
+  title = {Nearest-neighbor parameters for {G}{\textperiodcentered}{U} mismatches: 5'GU3'/3'UG5' is destabilizing in the contexts CGUG/GUGC, UGUA/AUGU, and AGUU/UUGA but stabilizing in {GGUC/CUGG}},
   journal = {Biochemistry},
   volume = {30},
+  number = {46},
   pages = {11124--11132},
   year = {1991},
+  doi = {10.1021/bi00110a015},
 }
 
 @article{turner2010nndb,
-  author = {Turner, D. H. and Mathews, D. H.},
+  author = {Turner, Douglas H. and Mathews, David H.},
   title = {{NNDB}: the nearest neighbor parameter database for predicting stability of nucleic acid secondary structure},
   journal = {Nucleic Acids Research},
   volume = {38},
+  number = {suppl\_1},
   pages = {D280--D282},
   year = {2010},
+  doi = {10.1093/nar/gkp892},
 }
 
 @article{mathews1999expanded,
-  author = {Mathews, D. H. and Sabina, J. and Zuker, M. and Turner, D. H.},
+  author = {Mathews, David H. and Sabina, Jeffrey and Zuker, Michael and Turner, Douglas H.},
   title = {Expanded sequence dependence of thermodynamic parameters improves prediction of {RNA} secondary structure},
   journal = {Journal of Molecular Biology},
   volume = {288},
+  number = {5},
   pages = {911--940},
   year = {1999},
+  doi = {10.1006/jmbi.1999.2700},
 }
 
 @article{mathews2004incorporating,
-  author = {Mathews, D. H. and others},
+  author = {Mathews, David H. and Disney, Matthew D. and Childs, Jessica L. and Schroeder, Susan J. and Zuker, Michael and Turner, Douglas H.},
   title = {Incorporating chemical modification constraints into a dynamic programming algorithm for prediction of {RNA} secondary structure},
   journal = {Proceedings of the National Academy of Sciences USA},
   volume = {101},
+  number = {19},
   pages = {7287--7292},
   year = {2004},
+  doi = {10.1073/pnas.0401799101},
 }
 
 @article{sugimoto1995rnadna,
-  author = {Sugimoto, N. and others},
+  author = {Sugimoto, Naoki and Nakano, Shu-ichi and Katoh, Misa and Matsumura, Akiko and Nakamuta, Hiroyuki and Ohmichi, Tatsuo and Yoneyama, Mari and Sasaki, Muneo},
   title = {Thermodynamic Parameters To Predict Stability of {RNA/DNA} Hybrid Duplexes},
   journal = {Biochemistry},
   volume = {34},
+  number = {35},
   pages = {11211--11216},
   year = {1995},
+  doi = {10.1021/bi00035a029},
 }
 
 @article{sugimoto2000thermodynamics,
-  author = {Sugimoto, N. and Nakano, M. and Nakano, S.},
+  author = {Sugimoto, Naoki and Nakano, Mariko and Nakano, Shu-ichi},
   title = {Thermodynamics--Structure Relationship of Single Mismatches in {RNA/DNA} Duplexes},
   journal = {Biochemistry},
   volume = {39},
+  number = {37},
   pages = {11270--11281},
   year = {2000},
+  doi = {10.1021/bi000819p},
 }
 
 @article{watkins2011thermodynamic,
-  author = {Watkins, N. E. and others},
+  author = {Watkins, Jr., Norman E. and Kennelly, William J. and Tsay, Mike J. and Tuin, Astrid and Swenson, Lara and Lee, Hyung-Ran and Morosyuk, Svetlana and Hicks, Donald A. and SantaLucia, Jr., John},
   title = {Thermodynamic contributions of single internal rA{\textperiodcentered}dA, rC{\textperiodcentered}dC, rG{\textperiodcentered}dG and rU{\textperiodcentered}dT mismatches in {RNA/DNA} duplexes},
   journal = {Nucleic Acids Research},
   volume = {39},
+  number = {5},
   pages = {1894--1902},
   year = {2011},
+  doi = {10.1093/nar/gkq905},
 }
