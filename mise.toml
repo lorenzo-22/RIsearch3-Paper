@@ -25,9 +25,9 @@ description = "Compile main.tex -> main.pdf"
 run = "tectonic -X compile main.tex"
 
 [tasks.build-supp]
-description = "Compile supplementary_main.tex -> supplementary_main.pdf"
-run = "tectonic -X compile supplementary_main.tex"
+description = "Compile supplementary.tex -> supplementary.pdf"
+run = "tectonic -X compile supplementary.tex"
 
 [tasks.clean]
 description = "Remove built PDFs"
-run = "rm -f main.pdf supplementary_main.pdf"
+run = "rm -f main.pdf supplementary.pdf"

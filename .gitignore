@@ -1,7 +1,7 @@
 # Tectonic build outputs (see mise.toml). Figures are committed PNGs; the only
 # tracked PDF is doc/oup-authoring-template-doc.pdf, so ignore by exact name.
 /main.pdf
-/supplementary_main.pdf
+/supplementary.pdf
 
 # mise local overrides
 mise.local.toml

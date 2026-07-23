@@ -1,7 +1,36 @@
+%%
+%% Supplementary material for "RIsearch and RIOT".
+%% Standalone, single-column document (compiled separately from main.tex).
+%%
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage[round]{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+
+\graphicspath{{figures/}}
+
+% Single-column supplementary styling: S-prefixed pages and captions.
+\renewcommand{\thepage}{S\arabic{page}}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\tablename}{Table}
+
+\title{Supplementary Material\\[4pt]
+  \large RIsearch and RIOT: An integrated, high-performance framework
+  for RNA--RNA interaction and siRNA off-target prediction}
+\author{Lorenzo Favaro}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+
 % =============================================================
 %  SUPPLEMENTARY MATERIAL
-%  Body content for the standalone supplementary document
-%  (compiled via supplementary_main.tex).
 % =============================================================
 \setcounter{figure}{0}
 \renewcommand{\thefigure}{S\arabic{figure}}
@@ -422,4 +451,9 @@ The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.
 Missing values were obtained as the average of corresponding RNA/RNA and DNA/DNA SEP.
 However the RNA/DNA parameters have been improved upon in two papers\cite{ref14,ref15}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for symmetrical mismatches, e.g. rAGdTG and rGGdCG.
 These values have been used in place of the values obtained by fitting in the final RNA/DNA SEP matrix.
+
+\bibliographystyle{oup-abbrvnat}
+\bibliography{reference}
+
+\end{document}
 

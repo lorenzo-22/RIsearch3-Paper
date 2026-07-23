@@ -30,7 +30,7 @@ With Tectonic already on your `PATH`, you can also build directly:
 
 ```bash
 tectonic -X compile main.tex
-tectonic -X compile supplementary_main.tex
+tectonic -X compile supplementary.tex
 ```
 
 Every push and pull request compiles both PDFs in CI (`.github/workflows/build.yml`),
@@ -41,7 +41,7 @@ using the same pinned engine.
 | Path | What |
 |------|------|
 | `main.tex` | Main document; inputs `frontmatter`, `body`, `backmatter` |
-| `supplementary_main.tex` | Supplementary material (compiled separately) |
+| `supplementary.tex` | Supplementary material, self-contained (compiled separately) |
 | `reference.bib` | Bibliography |
 | `figures/` | Figures (PNG) |
 | `oup-authoring-template.cls`, `oup-*.bst` | OUP journal class and BibTeX styles (vendored) |
