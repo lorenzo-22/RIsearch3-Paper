@@ -7,4 +7,16 @@
 %% =============================================================
 
 \usepackage{microtype}
+
+% Cross-references: cleveref auto-formats \cref{...} ("Fig. 1", "Figs. 2 and 3",
+% "Section 4") and keeps numbers/labels in sync. MUST load after hyperref, which
+% both documents load before \input{preamble}.
+\usepackage{cleveref}
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+
 \graphicspath{{figures/}}

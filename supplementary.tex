@@ -65,8 +65,8 @@ risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
     --no-dedup -p 1 --multifile --compress gzip --output results_dir
 \end{verbatim}
 
-With matched gzip-compressed output, RIsearch runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (Fig.~\ref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (Fig.~\ref{fig:risearch-extension}) and holding across thread counts (Fig.~\ref{fig:risearch-scaling}).
-RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (Figs.~\ref{fig:risearch-compression}, \ref{fig:risearch-compression-scaling}) widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend workloads and up to ${\sim}3\times$ on seed-only searches.
+With matched gzip-compressed output, RIsearch runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
+RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (\cref{fig:risearch-compression,fig:risearch-compression-scaling}) widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend workloads and up to ${\sim}3\times$ on seed-only searches.
 
 % ----- Figure S1 -----
 \begin{figure}[ht]
@@ -124,7 +124,7 @@ RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; subs
   gzip. zstd trims up to ${\sim}25\%$ of wall-clock time (relative time
   $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2
   offers only gzip-style output, so the head-to-head comparisons in
-  Fig.~\ref{fig:risearch-comparison} use gzip for both tools; with zstd,
+  \cref{fig:risearch-comparison} use gzip for both tools; with zstd,
   RIsearch's advantage over RIsearch2 widens further (quantified in the text
   above).%
 }
@@ -146,7 +146,7 @@ RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; subs
 \subsection*{Index construction}
 
 RIsearch builds its suffix-array index in parallel across cores with libsais~\citep{libsais}, whereas RIsearch2's libdivsufsort construction is single-threaded.
-Building the GRCh38/hg38 index was benchmarked against RIsearch2 with Hyperfine (Fig.~\ref{fig:indexing}).
+Building the GRCh38/hg38 index was benchmarked against RIsearch2 with Hyperfine (\cref{fig:indexing}).
 When the index is written to disk, RIsearch is already ${\sim}1.5\times$ faster single-threaded ($0.66\times$ the RIsearch2 time) and ${\sim}2.2\times$ faster at 16 threads ($0.45\times$); when the index is instead kept in memory, the parallel suffix-array construction is up to ${\sim}5.6\times$ faster ($0.18\times$ at 16 threads), showing that disk I/O, not computation, dominates the write-to-disk case.
 
 % ----- Figure S6: index construction -----
@@ -341,7 +341,7 @@ The legacy pipeline computed per-nucleotide RNA opening energies with a Python~2
 RIOT's \texttt{accessibility} subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning subprocesses: for each chromosome the call \texttt{RNA.fold\_compound(...).probs\_window(...)} returns per-position unpaired-probability vectors at the specified temperature (default $37\,^\circ$C, set via \texttt{-{}-temperature}), from which opening energies $O_i = -RT\ln p_i$ are computed in-process and written as a single per-chromosome Apache Parquet file with columnar compression and zero-copy Arrow reads.
 
 \paragraph{Accessibility pre-computation benchmark.}
-Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand (Fig.~\ref{fig:accessibility}, Table~\ref{tab:acc-bench}).
+Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand (\cref{fig:accessibility}, \cref{tab:acc-bench}).
 RIOT completes the full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
 The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
 
@@ -357,7 +357,7 @@ The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, 
   ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
   111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
   single compressed two-strand Parquet file rather than two uncompressed binary
-  files. Peak memory (not shown) is given in Table~\ref{tab:acc-bench}.%
+  files. Peak memory (not shown) is given in \cref{tab:acc-bench}.%
 }
 \label{fig:accessibility}
 \end{figure}

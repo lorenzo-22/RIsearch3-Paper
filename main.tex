@@ -4,10 +4,15 @@
 
 \documentclass[unnumsec,webpdf,contemporary,large]{oup-authoring-template}
 
-\input{preamble}  % shared with supplementary.tex: microtype, graphicspath
+\input{preamble}  % shared with supplementary.tex: microtype, graphicspath, cleveref
 
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc}
+
+% Cross-reference the separately-compiled supplement (compile supplementary.tex
+% first so supplementary.aux exists; labels are imported with a supp- prefix).
+\usepackage{xr}
+\externaldocument[supp-]{supplementary}
 
 \begin{document}
 
