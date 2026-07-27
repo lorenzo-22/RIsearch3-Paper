@@ -233,7 +233,7 @@ risearch2.x \
   \item \texttt{-q huesken\_on\_subset.fa} — FASTA file of siRNA query
     sequences (guide strand, 5$'$$\to$3$'$).
   \item \texttt{-s 2:7} — restrict seed matches to guide-strand positions
-    2–7 (the canonical seed region for RISC-mediated target recognition).
+    2--7 (the canonical seed region for RISC-mediated target recognition).
   \item \texttt{-e -10} — energy threshold of $-10$\,kcal\,mol$^{-1}$;
     candidate sites with a hybridisation energy above this value are
     discarded.
@@ -283,11 +283,11 @@ The output file (\texttt{annotation\_E-MTAB-2770\_GRCh38\_v47.bed}) is a tab-sep
 \begin{center}
 \small
 \begin{tabular}{lllllll}
-\hline
+\toprule
 chrom & start & end & transcript\_id & . & strand & TPM \\
-\hline
+\midrule
 chr12 & 6534516 & 6538371 & ENST00000229239.10 & . & + & 6130.06 \\
-\hline
+\bottomrule
 \end{tabular}
 \end{center}
 
@@ -307,7 +307,7 @@ Because both pipelines spawn independent child processes (GNU~parallel in the le
 For batch sizes of 1{,}000 and 500, each of the five timed runs used an independently drawn random subset of the master 2{,}000-siRNA set, ensuring that variance estimates reflect genuine sampling variability rather than run-to-run measurement noise alone.
 Pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
 
-% ----- Figure S6: RIOT vs legacy pipeline -----
+% ----- Figure S7: RIOT vs legacy pipeline -----
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/pipeline_comparison}
@@ -338,14 +338,14 @@ Pre-computed RIsearch2 binding-site prediction files were provided as input to b
 \subsection*{Accessibility pre-computation}
 
 The legacy pipeline computed per-nucleotide RNA opening energies with a Python~2.7 script that wrapped the \texttt{RNAplfold} executable (ViennaRNA~2.6.3) as a subprocess, emitting two flat \texttt{uint8} binary files per chromosome (one per strand).
-RIOT's \texttt{accessibility} subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning subprocesses: for each chromosome the call \texttt{RNA.fold\_compound(...).probs\_window(...)} returns per-position unpaired-probability vectors at the specified temperature (default 37\,$^\circ$C, set via \texttt{-{}-temperature}), from which opening energies $O_i = -RT\ln p_i$ are computed in-process and written as a single per-chromosome Apache Parquet file with columnar compression and zero-copy Arrow reads.
+RIOT's \texttt{accessibility} subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning subprocesses: for each chromosome the call \texttt{RNA.fold\_compound(...).probs\_window(...)} returns per-position unpaired-probability vectors at the specified temperature (default $37\,^\circ$C, set via \texttt{-{}-temperature}), from which opening energies $O_i = -RT\ln p_i$ are computed in-process and written as a single per-chromosome Apache Parquet file with columnar compression and zero-copy Arrow reads.
 
 \paragraph{Accessibility pre-computation benchmark.}
 Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and RIOT's \texttt{accessibility} subcommand (Fig.~\ref{fig:accessibility}, Table~\ref{tab:acc-bench}).
 RIOT completes the full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
 The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
 
-% ----- Figure S7: accessibility pre-computation -----
+% ----- Figure S8: accessibility pre-computation -----
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/accessibility_benchmark}
@@ -370,22 +370,22 @@ RIOT's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
 \label{tab:acc-bench}
 \small
 \begin{tabular}{lrr}
-\hline
+\toprule
 Metric & Legacy & New \\
-\hline
+\midrule
 Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
 Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
 On-disk profile size & 192.6\,GB    & 111.8\,GB \\
 Files per chromosome & 2            & 1 \\
-\hline
+\bottomrule
 \end{tabular}
 \end{table}
-\section{Temperature dependent energy parameters}\label{temperature-dependent-energy-parameters}
+\section*{Temperature dependent energy parameters}
 Notation, N indicates an unknown nucleotide.
 In the stacking energies, the N is substituted with a nucleotide (ACGT/U) giving the stack the highest possible energy. \_ indicates gap, a missing nucleotide, at the corresponding position, that is a bulge on the strand opposite the gap.
 \begin{verbatim}
-RNA: rA,rC,rG,rU,rN,r\_
-DNA: dA,dC,dG,dT,dN,d\_
+RNA: rA,rC,rG,rU,rN,r_
+DNA: dA,dC,dG,dT,dN,d_
 
 RNA/RNA: 5'-AC-3' bound to 3'-UG-5': rACUG
 DNA/DNA: 5'-AC-3' bound to 3'-TG-5': dACTG
@@ -393,10 +393,10 @@ RNA/DNA: 5'-rAC-3' bound to 3'-dTG-5': rACdUG
 \end{verbatim}
 
 The energy model of RIsearch is the sum of the energies of nucleotide stacks, where a stack is two nucleotides bound (aligned) to two nucleotides on the opposite strand or aligned to gaps on the opposite strand when the alignment contains bulges / gaps.
-A particular case is the stacks initiating or terminating the binding, which are written as, e.g. \_G\_C and G\_C\_, respectively.
+A particular case is the stacks initiating or terminating the binding, which are written as, e.g.\ \_G\_C and G\_C\_, respectively.
 These stacks are not allowed in other places in the alignment.
 
-The binding energy matrices are derived from those in ViennaRNA\cite{lorenz2011vienna}, which are again derived from the nearest neighbor energy model parameters from papers\cite{walter1994coaxial,turner1988rna,peritz1991thermodynamic,jaeger1989improved,he1991gu,turner2010nndb,mathews1999expanded,mathews2004incorporating} cited by ViennaRNA.
+The binding energy matrices are derived from those in ViennaRNA~\citep{lorenz2011vienna}, which are again derived from the nearest neighbor energy model parameters from papers~\citep{walter1994coaxial,turner1988rna,peritz1991thermodynamic,jaeger1989improved,he1991gu,turner2010nndb,mathews1999expanded,mathews2004incorporating} cited by ViennaRNA.
 \begin{verbatim}
 RNA/RNA: 2.6.3 RNAduplex
 
@@ -410,17 +410,17 @@ However, the RNA/DNA matrices are only found in version 2.1.9h, where they are t
 The first (target) sequence must be the RNA, and the second the DNA, and these should be entered with the corresponding alphabets, that is with U or T, respectively.
 
 When we allow GAPS along with the standard nucleotides, we have $5^4 = 625$ stacking energy parameters (SEP) we need to obtain values for in each of the four cases.
-However, not all SEPs are allowed, e.g. an alignment must start and end with a binding pair (\_G\_C is defined, but not \_G\_A) and a gap on both strands is not allowed.
+However, not all SEPs are allowed, e.g.\ an alignment must start and end with a binding pair (\_G\_C is defined, but not \_G\_A) and a gap on both strands is not allowed.
 In addition, some SEPs are identical due to the nature of the underlying chemistry (rGCAU is the same as rUACG, but rGCdAT is not the same as rUAdCG) and some SEPs are linearly dependent due to the nature of the model (a gap opened must also be closed (an example gap opening could be rAAU\_ and a closing could be rAA\_U).
 
 The undefined SEPs are set to a large positive energy (+20.0 kcal/mol) in the energy matrices, and we enforce linear dependencies according to the rules below
 
 \begin{enumerate}
-\item A stack of nucleotides is, e.g. rACGU or rACdGT is written as $(\mathit{ijkl})$
+\item A stack of nucleotides is, e.g.\ rACGU or rACdGT is written as $(\mathit{ijkl})$
 
 \item Nucleotide are considered pairing when one of AU, AT, CG, GU and GT
 
-\item If $i$ is paired but $j$ is not paired: $(\mathit{ijkl}) = (\mathit{jilk})$, e.g. rACdGG = rCAdGG
+\item If $i$ is paired but $j$ is not paired: $(\mathit{ijkl}) = (\mathit{jilk})$, e.g.\ rACdGG = rCAdGG
 
 \item For RNA/RNA and DNA/DNA $(\mathit{ijkl}) = (\mathit{lkji})$
 
@@ -431,25 +431,25 @@ These rules reduced the number of parameters to be determined from 625 to 266 fo
 The actual number of SEPs to be determined is a little lower when illegal stacking values are removed.
 
 The SEPs were obtained by fitting energies and alignments from the respective RNA, DNA and hybrid modes of the RNAduplex according to the list above.
-To this end we constructed 4 times 50,000 alignments of the following types
+To this end we constructed 4 times 50{,}000 alignments of the following types
 
 \begin{enumerate}
-\item Exact complimentary sequences
+\item Exact complementary sequences
 
-\item GU internal size 1-4 and, terminal, size -4
+\item GU internal size 1--4 and, terminal, size -4
 
-\item internal loops of size 1-4
+\item internal loops of size 1--4
 
-\item internal bulges of size 1-4
+\item internal bulges of size 1--4
 \end{enumerate}
 
-In each case the sequences were otherwise random and constructed to be 10-20nt complimentary + variation 4nt + 10-20nt complimentary.
+In each case the sequences were otherwise random and constructed to be 10--20\,nt complementary + variation 4\,nt + 10--20\,nt complementary.
 The alignments obtained from RNAduplex were then parameterized according to the corresponding stacking base pairs and the SEPs were obtained by a linear regression fit of the RNAduplex energy.
 In cases where the alignments were not full length, the alignments and energies were discarded before fitting.
 
-The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.9h version of ViennaRNA were constructed from the Sugimoto 95 paper\cite{sugimoto1995rnadna}, which only contains the SEPs for canonical basepair stacks like rACdTG.
+The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.9h version of ViennaRNA were constructed from the Sugimoto 95 paper~\citep{sugimoto1995rnadna}, which only contains the SEPs for canonical basepair stacks like rACdTG.
 Missing values were obtained as the average of corresponding RNA/RNA and DNA/DNA SEP.
-However the RNA/DNA parameters have been improved upon in two papers\cite{sugimoto2000thermodynamics,watkins2011thermodynamic}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g. rGCGdCAC and for symmetrical mismatches, e.g. rAGdTG and rGGdCG.
+However the RNA/DNA parameters have been improved upon in two papers~\citep{sugimoto2000thermodynamics,watkins2011thermodynamic}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g.\ rGCGdCAC and for symmetrical mismatches, e.g.\ rAGdTG and rGGdCG.
 These values have been used in place of the values obtained by fitting in the final RNA/DNA SEP matrix.
 
 \bibliographystyle{oup-abbrvnat}
