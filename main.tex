@@ -1,14 +1,18 @@
 %%
 %% RIsearch Application Note — built on the OUP authoring template.
-%% See oup-authoring-template.example.tex for the full feature reference shipped by OUP.
 %%
 
 \documentclass[unnumsec,webpdf,contemporary,large]{oup-authoring-template}
 
+\input{preamble}  % shared with supplementary.tex: microtype, graphicspath, cleveref
+
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc}
 
-\graphicspath{{figures/}}
+% Cross-reference the separately-compiled supplement (compile supplementary.tex
+% first so supplementary.aux exists; labels are imported with a supp- prefix).
+\usepackage{xr}
+\externaldocument[supp-]{supplementary}
 
 \begin{document}
 
@@ -21,6 +25,6 @@
 \bibliographystyle{oup-abbrvnat}
 \bibliography{reference}
 
-% Supplementary material is a separate document: see supplementary_main.tex.
+% Supplementary material is a separate document: see supplementary.tex.
 
 \end{document}

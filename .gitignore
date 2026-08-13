@@ -1,0 +1,18 @@
+# Tectonic build outputs (see mise.toml). Figures are committed PNGs; the only
+# tracked PDF is doc/oup-authoring-template-doc.pdf, so ignore by exact name.
+/main.pdf
+/supplementary.pdf
+
+# Tectonic intermediates. supplementary.aux is deliberately NOT ignored: main.tex
+# reads it via xr, and Overleaf only ever compiles one root document, so the aux
+# must be committed for the Supplementary Figure numbers to resolve there.
+*.log
+*.blg
+*.bbl
+*.out
+*.toc
+main.aux
+
+# mise local overrides
+mise.local.toml
+.mise.local.toml
