@@ -65,7 +65,7 @@ risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
     --no-dedup -p 1 --multifile --compress gzip --output results_dir
 \end{verbatim}
 
-With matched gzip-compressed output, RIsearch runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
+With matched gzip-compressed output, the new RIsearch version runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
 RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (\cref{fig:risearch-compression,fig:risearch-compression-scaling}) widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend workloads and up to ${\sim}3\times$ on seed-only searches.
 
 % ----- Figure S1 -----
