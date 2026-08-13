@@ -95,14 +95,14 @@ The on-disk index is memory-mapped and read without deserialisation, so a multi-
 
 \section{RIOT: a Modernised siRNA Off-Target pipeline}\label{sec:pipeline}
 
-Alongside the core, we distribute \textbf{RIOT} (RIsearch siRNA Off-Target pipeline), a complete reimplementation of the siRNA off-target pipeline of \citet{alkan2017risearch2} (\cref{fig:summary}).
-Beyond porting the workflow from Python~2.7 to Python~3, the rewrite targets three practical barriers that limited adoption of the original tool: installation, day-to-day use, and integration into existing analyses.
+Alongside the new version of RIsearch, we distribute \textbf{RIOT} (RIsearch siRNA Off-Target pipeline), a complete reimplementation of the siRNA off-target pipeline of \citet{alkan2017risearch2} (\cref{fig:summary}).
+Beyond porting the workflow from Python~2.7 to Python~3, the rewrite targets three practical barriers that limited adoption of the original tool: installation, ease of use, and integration into existing workflows.
 The underlying four-stage thermodynamic model---search, annotation intersection, accessibility, and a per-siRNA Boltzmann partition function---is preserved unchanged and described in full in the Supplementary Methods.
 
 \subsection*{Easier to install}
 
-The original pipeline required a Python~2.7 interpreter, a separately compiled RIsearch2 C binary, and externally installed \texttt{RNAplfold} (ViennaRNA) and \texttt{bedtools}~\citep{quinlan2010bedtools} executables on the user's \texttt{PATH}.
-RIOT removes every external binary: a single \texttt{pip install riot} brings in the RIsearch core as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory NCLS interval index~\citep{ncls} in place of \texttt{bedtools}.
+The original pipeline required a Python~2.7 interpreter, a separately compiled RIsearch2 C binary, and externally installed \texttt{RNAplfold} (ViennaRNA) and \texttt{bedtools}~\citep{quinlan2010bedtools} executables on the user's path.
+RIOT removes every external binary: a single \texttt{pip install riot} brings in the RIsearch software as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory NCLS interval index~\citep{ncls} in place of \texttt{bedtools}.
 All transitive dependencies are resolved and pinned through a universal \texttt{uv} lockfile, so installations are reproducible and free of version conflicts across machines.
 
 \subsection*{Easier to use}

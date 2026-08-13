@@ -13,7 +13,7 @@ jobs:
   compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Tectonic's Linux binary dynamically links fontconfig at runtime.
       - name: Install runtime deps
@@ -21,11 +21,11 @@ jobs:
 
       # Reads mise.toml, installs the pinned Tectonic, and trusts the config.
       - name: Install toolchain (Tectonic via mise)
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4
 
       # Tectonic fetches TeX packages on first build; cache them across runs.
       - name: Cache Tectonic package downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Tectonic
           key: tectonic-${{ runner.os }}-${{ hashFiles('**/*.tex', 'reference.bib') }}
@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: Upload PDFs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: manuscript-pdfs
           path: |
