@@ -34,11 +34,22 @@ jobs:
       - name: Build PDFs
         run: mise run build
 
+      # main.tex resolves Supplementary Figure numbers by reading the committed
+      # supplementary.aux through xr, so a stale one silently renumbers them all.
+      # Not `git diff --exit-code`: that exits 0 when the file is untracked.
+      - name: Check committed supplementary.aux is current
+        run: |
+          if [ -n "$(git status --porcelain -- supplementary.aux)" ]; then
+            echo "::error::supplementary.aux is stale or untracked; run 'mise run build' and commit it."
+            git status --porcelain -- supplementary.aux
+            exit 1
+          fi
+
       - name: Upload PDFs
         uses: actions/upload-artifact@v4
         with:
           name: manuscript-pdfs
           path: |
             main.pdf
-            supplementary_main.pdf
+            supplementary.pdf
           if-no-files-found: error

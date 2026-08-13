@@ -1,0 +1,83 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand*\HyPL@Entry[1]{}
+\citation{alkan2017risearch2}
+\citation{libsais}
+\HyPL@Entry{0<</P(\376\377\000S)/S/D>>}
+\citation{alkan2017risearch2}
+\citation{ncls}
+\citation{lorenz2011vienna}
+\@writefile{lof}{\contentsline {figure}{\numberline {S1}{\ignorespaces \textbf  {Per-configuration search time of RIsearch versus RIsearch2.} Wall-clock time at 32 threads with extension length 20\,nt and matched gzip-compressed output, across seed schemes, output formats (\texttt  {fmt\_p1}--\texttt  {p4}) and mismatch counts (\texttt  {m1}--\texttt  {m3}). Numbers above each bar pair give RIsearch's time relative to RIsearch2 (lower is faster). On the canonical seed-and-extend schemes RIsearch is roughly twice as fast (relative time $0.44$--$0.53$); the margin narrows for long exact-match singleton seeds (12, 16, 21), whose sub-second runtimes are dominated by fixed start-up rather than by search.}}{S2}{figure.1}\protected@file@percent }
+\newlabel{fig:risearch-comparison}{{S1}{S2}{\textbf {Per-configuration search time of RIsearch versus RIsearch2.} Wall-clock time at 32 threads with extension length 20\,nt and matched gzip-compressed output, across seed schemes, output formats (\texttt {fmt\_p1}--\texttt {p4}) and mismatch counts (\texttt {m1}--\texttt {m3}). Numbers above each bar pair give RIsearch's time relative to RIsearch2 (lower is faster). On the canonical seed-and-extend schemes RIsearch is roughly twice as fast (relative time $0.44$--$0.53$); the margin narrows for long exact-match singleton seeds (12, 16, 21), whose sub-second runtimes are dominated by fixed start-up rather than by search}{figure.1}{}}
+\newlabel{fig:risearch-comparison@cref}{{[figure][1][]S1}{[S1][1][]S2}}
+\newlabel{eq:partition}{{1}{S2}{RIOT pipeline stages and partition-function model}{equation.0.1}{}}
+\newlabel{eq:partition@cref}{{[equation][1][]1}{[S1][2][]S2}}
+\citation{huesken2005design}
+\@writefile{lof}{\contentsline {figure}{\numberline {S2}{\ignorespaces \textbf  {Thread scaling of RIsearch versus RIsearch2} (seed scheme\nobreakspace  {}6, extension 20\,nt). RIsearch is faster at every thread count, from $1.7\times $ single-threaded (RIsearch2 188\,s vs.\ RIsearch 110\,s) to $2.1\times $ at 32 threads (17.2\,s vs.\ 8.3\,s). Both tools scale near-linearly up to 16 threads.}}{S3}{figure.2}\protected@file@percent }
+\newlabel{fig:risearch-scaling}{{S2}{S3}{\textbf {Thread scaling of RIsearch versus RIsearch2} (seed scheme~6, extension 20\,nt). RIsearch is faster at every thread count, from $1.7\times $ single-threaded (RIsearch2 188\,s vs.\ RIsearch 110\,s) to $2.1\times $ at 32 threads (17.2\,s vs.\ 8.3\,s). Both tools scale near-linearly up to 16 threads}{figure.2}{}}
+\newlabel{fig:risearch-scaling@cref}{{[figure][2][]S2}{[S1][1][]S3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {S3}{\ignorespaces \textbf  {Effect of extension length on search time} (0--20\,nt, 32 threads, matched gzip output). Numbers above bars give RIsearch's time relative to RIsearch2. RIsearch's advantage grows with extension length as the Gotoh dynamic-programming stage comes to dominate runtime; at extension\nobreakspace  {}0 (seed matching only) the two tools are closer.}}{S4}{figure.3}\protected@file@percent }
+\newlabel{fig:risearch-extension}{{S3}{S4}{\textbf {Effect of extension length on search time} (0--20\,nt, 32 threads, matched gzip output). Numbers above bars give RIsearch's time relative to RIsearch2. RIsearch's advantage grows with extension length as the Gotoh dynamic-programming stage comes to dominate runtime; at extension~0 (seed matching only) the two tools are closer}{figure.3}{}}
+\newlabel{fig:risearch-extension@cref}{{[figure][3][]S3}{[S1][1][]S4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {S4}{\ignorespaces \textbf  {Output-compression modes within RIsearch}: zstd versus gzip (32 threads, extension 20\,nt). Numbers above bars give zstd time relative to gzip. zstd trims up to ${\sim }25\%$ of wall-clock time (relative time $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2 offers only gzip-style output, so the head-to-head comparisons in \cref  {fig:risearch-comparison} use gzip for both tools; with zstd, RIsearch's advantage over RIsearch2 widens further (quantified in the text above).}}{S5}{figure.4}\protected@file@percent }
+\newlabel{fig:risearch-compression}{{S4}{S5}{\textbf {Output-compression modes within RIsearch}: zstd versus gzip (32 threads, extension 20\,nt). Numbers above bars give zstd time relative to gzip. zstd trims up to ${\sim }25\%$ of wall-clock time (relative time $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2 offers only gzip-style output, so the head-to-head comparisons in \cref {fig:risearch-comparison} use gzip for both tools; with zstd, RIsearch's advantage over RIsearch2 widens further (quantified in the text above)}{figure.4}{}}
+\newlabel{fig:risearch-compression@cref}{{[figure][4][]S4}{[S1][1][]S5}}
+\@writefile{toc}{\contentsline {paragraph}{Sample identification.}{S5}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reference genome and annotation.}{S5}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Quantification.}{S5}{section*.11}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {S5}{\ignorespaces \textbf  {Thread scaling of RIsearch output compression} (seed\nobreakspace  {}6, extension 20\,nt): zstd is consistently faster than gzip, e.g.\ 6.7\,s vs.\ 8.3\,s at 32 threads.}}{S6}{figure.5}\protected@file@percent }
+\newlabel{fig:risearch-compression-scaling}{{S5}{S6}{\textbf {Thread scaling of RIsearch output compression} (seed~6, extension 20\,nt): zstd is consistently faster than gzip, e.g.\ 6.7\,s vs.\ 8.3\,s at 32 threads}{figure.5}{}}
+\newlabel{fig:risearch-compression-scaling@cref}{{[figure][5][]S5}{[S1][1][]S6}}
+\@writefile{toc}{\contentsline {paragraph}{BED7 construction.}{S6}{section*.12}\protected@file@percent }
+\citation{huesken2005design}
+\citation{huesken2005design}
+\@writefile{lof}{\contentsline {figure}{\numberline {S6}{\ignorespaces \textbf  {Suffix-array index construction time for the GRCh38/hg38 genome:} RIsearch2 (C, single-threaded) versus RIsearch (Rust) at 1, 8 and 16 threads, each with and without writing the index to disk. Numbers above bars give the time relative to the corresponding RIsearch2 baseline (lower is faster). Writing to disk, RIsearch builds the index ${\sim }2.2\times $ faster at 16 threads ($0.45\times $); kept in memory, its parallel construction is up to ${\sim }5.6\times $ faster ($0.18\times $), indicating that disk I/O dominates the write-to-disk timing.}}{S7}{figure.6}\protected@file@percent }
+\newlabel{fig:indexing}{{S6}{S7}{\textbf {Suffix-array index construction time for the GRCh38/hg38 genome:} RIsearch2 (C, single-threaded) versus RIsearch (Rust) at 1, 8 and 16 threads, each with and without writing the index to disk. Numbers above bars give the time relative to the corresponding RIsearch2 baseline (lower is faster). Writing to disk, RIsearch builds the index ${\sim }2.2\times $ faster at 16 threads ($0.45\times $); kept in memory, its parallel construction is up to ${\sim }5.6\times $ faster ($0.18\times $), indicating that disk I/O dominates the write-to-disk timing}{figure.6}{}}
+\newlabel{fig:indexing@cref}{{[figure][6][]S6}{[S1][2][]S7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {S7}{\ignorespaces \textbf  {Wall-clock time and peak memory of RIOT versus the legacy pipeline across batch sizes.} Each box spans the interquartile range of five independent randomised trials; the central line marks the median; whiskers extend to the full range. \textbf  {(A)}\nobreakspace  {}Wall-clock time (seconds) for the intersection, accessibility annotation, Boltzmann partition-function, and output stages on 500, 1{,}000, and 2{,}000 siRNAs from the Hüsken et\nobreakspace  {}al.\ genome-wide efficacy library\nobreakspace  {}\citep  {huesken2005design}. RIOT achieves a $7.7{-}10.7\times $ speed-up relative to the legacy Python\nobreakspace  {}2.7 implementation. \textbf  {(B)}\nobreakspace  {}Peak resident-set size (GB) of the parent process as reported by \texttt  {/usr/bin/time -v}. RIOT plateaus at $\approx $7\,GB regardless of batch size; the legacy pipeline grows from $\sim $8.5\,GB to $\sim $10\,GB as batch size increases. Benchmarks were run on an AMD EPYC 9554 server (64 physical cores) with 32 workers for both pipelines; pre-computed RIsearch2 binding-site predictions were provided as input so that search time is excluded from both measurements.}}{S8}{figure.7}\protected@file@percent }
+\newlabel{fig:pipeline}{{S7}{S8}{\textbf {Wall-clock time and peak memory of RIOT versus the legacy pipeline across batch sizes.} Each box spans the interquartile range of five independent randomised trials; the central line marks the median; whiskers extend to the full range. \textbf {(A)}~Wall-clock time (seconds) for the intersection, accessibility annotation, Boltzmann partition-function, and output stages on 500, 1{,}000, and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy library~\citep {huesken2005design}. RIOT achieves a $7.7{-}10.7\times $ speed-up relative to the legacy Python~2.7 implementation. \textbf {(B)}~Peak resident-set size (GB) of the parent process as reported by \texttt {/usr/bin/time -v}. RIOT plateaus at $\approx $7\,GB regardless of batch size; the legacy pipeline grows from $\sim $8.5\,GB to $\sim $10\,GB as batch size increases. Benchmarks were run on an AMD EPYC 9554 server (64 physical cores) with 32 workers for both pipelines; pre-computed RIsearch2 binding-site predictions were provided as input so that search time is excluded from both measurements}{figure.7}{}}
+\newlabel{fig:pipeline@cref}{{[figure][7][]S7}{[S1][7][]S8}}
+\@writefile{toc}{\contentsline {paragraph}{Accessibility pre-computation benchmark.}{S8}{section*.15}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {S1}{\ignorespaces Full-genome accessibility pre-computation: legacy script versus RIOT's \texttt  {accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$; 64 workers).}}{S8}{table.1}\protected@file@percent }
+\newlabel{tab:acc-bench}{{S1}{S8}{Full-genome accessibility pre-computation: legacy script versus RIOT's \texttt {accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$; 64 workers)}{table.1}{}}
+\newlabel{tab:acc-bench@cref}{{[table][1][]S1}{[S1][8][]S8}}
+\citation{lorenz2011vienna}
+\citation{walter1994coaxial,turner1988rna,peritz1991thermodynamic,jaeger1989improved,he1991gu,turner2010nndb,mathews1999expanded,mathews2004incorporating}
+\@writefile{lof}{\contentsline {figure}{\numberline {S8}{\ignorespaces \textbf  {Full-genome accessibility pre-computation: legacy script versus RIOT's \texttt  {accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$, 64 workers). \textbf  {(A)}\nobreakspace  {}Wall-clock time: RIOT folds the whole genome in 8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt  {RNAplfold} script ($-34\%$). \textbf  {(B)}\nobreakspace  {}Total on-disk profile size across all chromosomes: 111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a single compressed two-strand Parquet file rather than two uncompressed binary files. Peak memory (not shown) is given in \cref  {tab:acc-bench}.}}{S9}{figure.8}\protected@file@percent }
+\newlabel{fig:accessibility}{{S8}{S9}{\textbf {Full-genome accessibility pre-computation: legacy script versus RIOT's \texttt {accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$, 64 workers). \textbf {(A)}~Wall-clock time: RIOT folds the whole genome in 8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt {RNAplfold} script ($-34\%$). \textbf {(B)}~Total on-disk profile size across all chromosomes: 111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a single compressed two-strand Parquet file rather than two uncompressed binary files. Peak memory (not shown) is given in \cref {tab:acc-bench}}{figure.8}{}}
+\newlabel{fig:accessibility@cref}{{[figure][8][]S8}{[S1][8][]S9}}
+\citation{sugimoto1995rnadna}
+\citation{sugimoto2000thermodynamics,watkins2011thermodynamic}
+\bibstyle{oup-abbrvnat}
+\bibdata{reference}
+\bibcite{ncls}{{1}{2007}{{Alekseyenko and Lee}}{{}}}
+\bibcite{alkan2017risearch2}{{2}{2017}{{Alkan et~al.}}{{Alkan, Wenzel, Palasca, Kerpedjiev, Rudebeck, Stadler, Hofacker, and Gorodkin}}}
+\bibcite{libsais}{{3}{2021}{{Grebnov}}{{}}}
+\bibcite{he1991gu}{{4}{1991}{{He et~al.}}{{He, Kierzek, SantaLucia, Walter, and Turner}}}
+\bibcite{huesken2005design}{{5}{2005}{{Huesken et~al.}}{{Huesken, Lange, Mickanin, Weiler, Asselbergs, Warner, Meloon, Engel, Rosenberg, Cohen, Labow, Reinhardt, Natt, and Hall}}}
+\bibcite{jaeger1989improved}{{6}{1989}{{Jaeger et~al.}}{{Jaeger, Turner, and Zuker}}}
+\bibcite{lorenz2011vienna}{{7}{2011}{{Lorenz et~al.}}{{Lorenz, Bernhart, H{\"o}ner~zu Siederdissen, Tafer, Flamm, Stadler, and Hofacker}}}
+\bibcite{mathews1999expanded}{{8}{1999}{{Mathews et~al.}}{{Mathews, Sabina, Zuker, and Turner}}}
+\bibcite{mathews2004incorporating}{{9}{2004}{{Mathews et~al.}}{{Mathews, Disney, Childs, Schroeder, Zuker, and Turner}}}
+\bibcite{peritz1991thermodynamic}{{10}{1991}{{Peritz et~al.}}{{Peritz, Kierzek, Sugimoto, and Turner}}}
+\bibcite{sugimoto1995rnadna}{{11}{1995}{{Sugimoto et~al.}}{{Sugimoto, Nakano, Katoh, Matsumura, Nakamuta, Ohmichi, Yoneyama, and Sasaki}}}
+\bibcite{sugimoto2000thermodynamics}{{12}{2000}{{Sugimoto et~al.}}{{Sugimoto, Nakano, and Nakano}}}
+\bibcite{turner2010nndb}{{13}{2010}{{Turner and Mathews}}{{}}}
+\bibcite{turner1988rna}{{14}{1988}{{Turner et~al.}}{{Turner, Sugimoto, and Freier}}}
+\bibcite{walter1994coaxial}{{15}{1994}{{Walter et~al.}}{{Walter, Turner, Kim, Lyttle, M{\"u}ller, Mathews, and Zuker}}}
+\bibcite{watkins2011thermodynamic}{{16}{2011}{{Watkins et~al.}}{{Watkins, Kennelly, Tsay, Tuin, Swenson, Lee, Morosyuk, Hicks, and SantaLucia}}}
+\gdef \@abspage@last{12}
