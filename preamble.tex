@@ -1,17 +1,6 @@
-%% =============================================================
-%%  Shared preamble for main.tex and supplementary.tex.
-%%  main.tex uses the OUP class and supplementary.tex uses `article`,
-%%  so ONLY class-agnostic packages/macros belong here; class-specific
-%%  packages stay in each document. Add shared \usepackage or
-%%  \newcommand definitions here so the two documents cannot drift.
-%% =============================================================
-
 \usepackage{microtype}
-
-% Cross-references: cleveref auto-formats \cref{...} ("Fig. 1", "Figs. 2 and 3",
-% "Section 4") and keeps numbers/labels in sync. MUST load after hyperref, which
-% both documents load before \input{preamble}.
 \usepackage{cleveref}
+
 \crefname{figure}{Fig.}{Figs.}
 \Crefname{figure}{Figure}{Figures}
 \crefname{table}{Table}{Tables}
