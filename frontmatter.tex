@@ -26,8 +26,8 @@ RIsearch2 is a widely used tool but predates modern packaging and the Python dat
 \textbf{Results:} We introduce new versions of both tools with substantially improved usability, interoperability with modern analysis frameworks, and easier installation.
 RIsearch~(v3) is a Rust reimplementation of the RIsearch2 search algorithm with Python bindings, ranking among the fastest tools for genome-wide RNA--RNA interaction scans; RIOT (RIsearch siRNA Off-Target pipeline) is a modern rewrite of the off-target workflow built directly on those bindings.
 RIsearch~(v3) is functionally equivalent to RIsearch2 while running 2--3$\times$ faster; RIOT installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
-\textbf{Availability and implementation:} RIsearch and RIOT are released under [LICENSE] at \href{https://github.com/}{GitHub URL}.
-The Rust binary installs via \texttt{cargo install risearch}; the Python packages are available on PyPI as \texttt{risearch} (search core) and \texttt{riot} (off-target pipeline).\\
+\textbf{Availability and implementation:} RIsearch and RIOT are released under the Business Source License 1.1 (source-available; free for research and production use except third-party hosted services; converts to Apache-2.0 in 2030) at \href{https://github.com/saiden89/risearch}{github.com/saiden89/risearch} and \href{https://github.com/lorenzo-22/RIsearch_pipeline}{github.com/lorenzo-22/RIsearch\_pipeline}.
+The Rust binary installs via \texttt{cargo install risearch}; the Python packages are available on PyPI as \texttt{risearch} (search core) and \texttt{riot-rna} (off-target pipeline).\\
 \textbf{Contact:} \href{mailto:gorodkin@sund.ku.dk}{gorodkin@sund.ku.dk}}
 
 \keywords{RNA-RNA interaction, siRNA off-target, Rust, Python bindings, bioinformatics tooling}

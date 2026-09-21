@@ -19,7 +19,7 @@ We introduce new versions of both tools, redesigned for improved usability, inte
   \textbf{Overview of RIsearch and RIOT.}
   \textbf{(Top, blue)} \textbf{RIsearch} is a Rust reimplementation of the RIsearch2 search algorithm, installable as a single static binary via \texttt{cargo install risearch} (Crates.io) or as a Python wheel via \texttt{pip install risearch} (PyPI).
   The core builds a suffix-array index of target sequences and runs a seed-and-extend dynamic-programming search using the simplified RIsearch energy model, producing interaction hits as a TSV file.
-  \textbf{(Bottom, green)} \textbf{RIOT} (RIsearch siRNA Off-Target pipeline) is a modern Python~3 rewrite installable with a single \texttt{pip install riot}, which bundles the RIsearch wheel, the ViennaRNA~2.7.2 Python API, and an in-memory NCLS interval index with no external binaries required.
+  \textbf{(Bottom, green)} \textbf{RIOT} (RIsearch siRNA Off-Target pipeline) is a modern Python~3 rewrite installable with a single \texttt{pip install riot-rna}, which bundles the RIsearch wheel, the ViennaRNA~2.7.2 Python API, and an in-memory NCLS interval index with no external binaries required.
   RIOT orchestrates four stages: (\textit{i})~RIsearch index and search invoked natively via PyO3 bindings; (\textit{ii})~intersection of predicted binding sites with a transcriptome annotation using an NCLS index; (\textit{iii})~per-site RNA accessibility computed through the ViennaRNA Python API; and (\textit{iv})~a per-siRNA Boltzmann partition function yielding off-target probabilities, written to a TSV output file.
   The dashed arrow indicates that RIOT calls RIsearch within the same process via the Python bindings, with no subprocess or intermediate files.
 }
@@ -38,7 +38,7 @@ That combination is why we built RIsearch in Rust.
 \section{RIsearch Core Implementation}\label{sec:core}\label{subsec:pybindings}
 
 RIsearch reimplements the RIsearch2 seed-and-extend pipeline.
-Targets are concatenated and indexed in a suffix array, built in linear time by libsais~\citep{libsais}, and each query is scanned against the index for near-complementary seeds, permitting G--U wobble pairs and a configurable number of mismatches.
+Targets are concatenated and indexed in a suffix array, built in linear time by libsais~\citep{libsais}, and each query is scanned against the index for near-complementary seeds, with a configurable number of mismatches and, optionally, G--U wobble pairs (\texttt{-{}-seed-wobble}).
 Seeds are extended in both directions with Gotoh's three-state affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a nearest-neighbour dinucleotide model and penalising bulges and internal loops.
 The algorithm and energy model are unchanged, so predicted hybridisation energies match those of RIsearch2.
 
@@ -52,7 +52,7 @@ The result is a single self-contained binary that installs in one command and be
 
 Where RIsearch2 can return many overlapping alignments for one duplex, RIsearch reports a single lowest-energy alignment, collapsing the seeds that extend to the same site, and the reported hit set does not depend on the number of threads.
 It validates its inputs up front and, on malformed data, reports a specific error that names the offending record, character, or row rather than failing obscurely.
-The command line is rebuilt around task-oriented subcommands, and legacy RIsearch2 flags are still accepted so existing scripts run unchanged.
+The command line is rebuilt around task-oriented subcommands, and legacy RIsearch2 flags are still accepted so existing scripts keep working; the one behavioural difference is that G--U wobble pairs in seeds, always on in RIsearch2, are now opt-in.
 
 \subsection*{Easier to integrate}
 
@@ -71,7 +71,7 @@ Searches release Python's global interpreter lock, so they run concurrently with
 \subsection*{Easier to extend}
 
 Energy models are data rather than code: each parameter set is declared in a manifest with its published provenance and validated at build time, so supporting new thermodynamic parameters is a data file rather than an engine change.
-The engine itself is modular and open source, and is covered by an automated test suite that includes mutation testing, so contributors can extend it and re-verify its behaviour with confidence.
+The engine itself is modular, with source available, and its behaviour is verified against independent reference implementations through property-based and metamorphic tests, complemented by mutation testing and bounded model-checking proofs (Kani), so contributors can extend it and re-verify its behaviour with confidence.
 
 \subsection*{Performance}
 
@@ -86,14 +86,14 @@ The underlying four-stage thermodynamic model---search, annotation intersection,
 
 \subsection*{Easier to install}
 The original pipeline required a Python~2.7 interpreter, a separately compiled RIsearch2 C binary, and externally installed \texttt{RNAplfold} (ViennaRNA) and \texttt{bedtools}~\citep{quinlan2010bedtools} executables on the user's path.
-RIOT removes every external binary: a single \texttt{pip install riot} brings in the RIsearch software as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory NCLS interval index~\citep{ncls} in place of \texttt{bedtools}.
+RIOT removes every external binary: a single \texttt{pip install riot-rna} brings in the RIsearch software as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory NCLS interval index~\citep{ncls} in place of \texttt{bedtools}.
 All transitive dependencies are resolved and pinned through a universal \texttt{uv} lockfile, so installations are reproducible and free of version conflicts across machines.
 
 \subsection*{Easier to use}
 The legacy pipeline was a single \texttt{argparse} script driven by a fixed set of command-line flags.
-RIOT retains backward-compatible flags but adds a YAML configuration mode: every option---inputs, the RIsearch energy and seed thresholds, the saturation parameters $\alpha$, $\gamma$, and $\theta$, and the output format---can be declared in one file, validated at startup against a typed OmegaConf schema.
+RIOT retains backward-compatible flags but adds a YAML configuration mode: every option---inputs, the RIsearch energy model, seed geometry, and energy threshold, the saturation parameters $\alpha$, $\gamma$, and $\theta$, and the output format---can be declared in one file, validated at startup against a typed OmegaConf schema.
 A single configuration file captures an entire run, making analyses straightforward to reproduce and to share between collaborators.
-For large screens, RIOT integrates natively with Slurm: one orchestrator submits the indexing, accessibility, and off-target stages as dependent batch jobs with per-stage resource requests, replacing hand-written submission scripts.
+For large screens, RIOT integrates natively with Slurm: one orchestrator submits the indexing, accessibility, and off-target stages as dependent batch jobs with per-stage resource requests, and a single configuration can fan one screen out across multiple transcriptomes as independent job groups, replacing hand-written submission scripts.
 
 A single \texttt{-{}-temperature} option (default $37\,^\circ$C) propagates to both the ViennaRNA accessibility calculation and the Boltzmann partition function, so that hybridisation and opening energies are always evaluated on a consistent thermodynamic scale---directly replicating the intent of the original RIsearch model~\citep{wenzel2012risearch} while exposing the folding condition as a first-class parameter (Supplementary Methods).
 
