@@ -1,15 +1,15 @@
-% RIsearch + RIOT overview — TikZ source (Figure 1).
+% RIsearch + siOFF overview — TikZ source (Figure 1).
 % A two-lane install -> execute -> output flow, blocks aligned on one row per lane.
 %   Lane 1: RIsearch  (Crates.io / PyPI install, SA seed-and-extend, generic output).
-%   Lane 2: RIOT      (PyPI install, RIsearch-backed pipeline, final off-target file).
+%   Lane 2: siOFF      (PyPI install, RIsearch-backed pipeline, final off-target file).
 % Required libraries (already loaded in main.tex for summary.tex):
 %   \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc}
 
 % ── Palette (matches the package's two-tool colour identity) ─────────────────
 \definecolor{CoreBlue}{RGB}{179,208,232}     % RIsearch fill
 \definecolor{CoreBorder}{RGB}{68,114,196}    % RIsearch border
-\definecolor{PipeGreen}{RGB}{198,224,180}    % RIOT fill
-\definecolor{PipeBorder}{RGB}{83,153,51}     % RIOT border
+\definecolor{PipeGreen}{RGB}{198,224,180}    % siOFF fill
+\definecolor{PipeBorder}{RGB}{83,153,51}     % siOFF border
 \definecolor{CodeBg}{RGB}{246,246,248}       % code-snippet background
 \definecolor{CodeBd}{RGB}{200,200,205}       % code-snippet border
 \definecolor{ChanBg}{RGB}{255,255,255}       % install-channel chip
@@ -104,18 +104,18 @@
 \node[fit=(rs-install-box)(rs-run-box)(rs-out-box), inner sep=0] (lane1) {};
 
 % =====================================================================
-%  LANE 2 — RIOT  (all blocks on one row, tops aligned below lane 1)
+%  LANE 2 — siOFF  (all blocks on one row, tops aligned below lane 1)
 % =====================================================================
 \coordinate (l2) at ([yshift=-2.0cm]lane1.south -| rs-install);
 
 % ---- (2a) Install ---------------------------------------------------
 \node[stage=PipeBorder, text width=4.1cm, anchor=north] (ro-install) at (l2)
-  {Install (RIOT pipeline)};
+  {Install (siOFF pipeline)};
 \node[chip=PipeBorder, anchor=north, text width=1.8cm]
   (ro-pypi) at ([yshift=-4pt]ro-install.south) {PyPI};
 \node[code, anchor=north, text width=4.1cm]
   (ro-install-cmd) at ([yshift=-2pt]ro-pypi.south)
-  {\$ pip install riot\\[1pt]
+  {\$ pip install sioff-rna\\[1pt]
    \# bundles: risearch wheel,\\
    \# ViennaRNA API, NCLS\\
    \# uv-locked, no binaries};
@@ -127,11 +127,11 @@
   (ro-run) at ([xshift=\colB cm]ro-install.north) {Run off-target pipeline};
 \node[code, anchor=north, text width=4.55cm]
   (ro-run-cmd) at ([yshift=-4pt]ro-run.south)
-  {\$ riot off-targets \textbackslash\\
+  {\$ sioff off-targets \textbackslash\\
    \ \ \ -s sirna.fa --genome hg38.fa \textbackslash\\
    \ \ \ -t annot.gtf -a access/ \textbackslash\\
    \ \ \ --temperature 37 -o off.tsv\\[2pt]
-   \# or: riot -c run.yaml};
+   \# or: sioff -c run.yaml};
 \node[stage=CoreBorder, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries]
   (st-search) at ([yshift=-4pt]ro-run-cmd.south) {1. RIsearch index + search (in-process)};
 \node[stage=NclsPlum, text width=4.4cm, anchor=north, font=\sffamily\scriptsize\bfseries, fill=NclsPlum!18, draw=NclsPlum]
@@ -149,7 +149,7 @@
 
 % ---- (2c) Final output file -----------------------------------------
 \node[stage=PipeBorder, text width=5.0cm, anchor=north]
-  (ro-out) at ([xshift=\colC cm]ro-install.north) {RIOT output};
+  (ro-out) at ([xshift=\colC cm]ro-install.north) {siOFF output};
 \node[code, anchor=north, text width=5.0cm]
   (ro-out-tbl) at ([yshift=-4pt]ro-out.south)
   {sirna\_id   transcript\_id   P\_off\\[1pt]
@@ -166,7 +166,7 @@
 % lane-2 label tab
 \node[laneband=PipeBorder]
   (ro-tab) at ([yshift=4pt]ro-install-box.north west)
-  {RIOT \textemdash\ RIsearch siRNA Off-Target pipeline};
+  {siOFF};
 
 % ---- "built on RIsearch" connector: straight segments, routed down the
 %      clear corridor between the pipeline box and the off-target table so
