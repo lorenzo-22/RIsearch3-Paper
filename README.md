@@ -1,4 +1,4 @@
-f# RIsearch and RIOT — manuscript
+# RIsearch and RIOT — manuscript
 
 LaTeX source for the *Bioinformatics* Application Note:
 
