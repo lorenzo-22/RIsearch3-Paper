@@ -5,6 +5,9 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc}
 
+\usepackage{fontawesome5}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black,citecolor=black}
+
 % Cross-reference the separately-compiled supplement (compile supplementary.tex
 % first so supplementary.aux exists; labels are imported with a supp- prefix).
 \usepackage{xr}
@@ -19,16 +22,14 @@
 
 \firstpage{1}
 
-% JG: "off-target prediction" -> "off-target assessment"; write RNA{--}RNA.
-\title[RIsearch]{RIsearch and siOFF: An integrated, high-performance framework for RNA–RNA interaction and siRNA off-target prediction}
+\title[RIsearch]{RIsearch and siOFF: An integrated, high-performance framework for RNA{--}RNA interaction and siRNA off-target assessment}
 
 \author[1]{Stefano Roncelli \ORCID{0009-0001-4830-202X}}
 \author[1]{Lorenzo Favaro \ORCID{0009-0002-8879-0555}}
 \author[1]{Christian Anthon \ORCID{0000-0002-4336-1688}}
 \author[1,$\ast$]{Jan Gorodkin \ORCID{0000-0001-5823-4000}}
 
-% JG: prepend "Center for non-coding RNA in Technology and Health" to orgdiv.
-\address[1]{Center for non-coding RNA in Technology and Health, \orgdiv{Section for Health Data Science and AI, Department of Public Health}, \orgname{University of Copenhagen}, \orgaddress{\street{Thorvaldsensvej 57}, \postcode{1871}, \state{Frederiksberg}, \country{Denmark}}}
+\address[1]{\orgdiv{Center for non-coding RNA in Technology and Health, Section for Health Data Science and AI, Department of Public Health}, \orgname{University of Copenhagen}, \orgaddress{\street{Thorvaldsensvej 57}, \postcode{1871}, \state{Frederiksberg}, \country{Denmark}}}
 
 \corresp[$\ast$]{Corresponding author. \href{mailto:gorodkin@rth.dk}{gorodkin@rth.dk}}
 
@@ -36,120 +37,87 @@
 \revised{Date}{0}{Year}
 \accepted{Date}{0}{Year}
 
-% JG Motivation, replace with: "A substantial part of the functionality of RNA is through its interactions to other RNAs. Given the scale of the transcriptome, there is high demand for fast RNA interaction searches, exemplified by applications such as siRNA off-target assessment. Furthermore, there is an increasing demand to ensure seamless interoperability with other tools, which now can be facilitated by the evolvement of the recent packaging and the Python data ecosystems."
-% JG Results, open with: "Here, we introduce new versions of RIsearch2 and its accompanying siRNA off-target assessment pipeline. Both tools, RIsearch (v3) and siOFF, have substantially improved usability, interoperability and seamless installation procedure."
-% JG: drop "ranking among the fastest tools for genome-wide RNA--RNA interaction scans" and the "siOFF is a modern rewrite ..." clause.
-% JG: second Results sentence -> "The full re-implementation in RIsearch (v3) is functionally equivalent to RIsearch2 ...".
 \abstract{
-\textbf{Motivation:} RNA--RNA interaction prediction underpins siRNA design and non-coding RNA analysis.
-RIsearch2 is a widely used tool but predates modern packaging and the Python data ecosystem, limiting integration into contemporary analysis pipelines.\\
-\textbf{Results:} We introduce new versions of both tools with substantially improved usability, interoperability with modern analysis frameworks, and easier installation.
-RIsearch~(v3) is a Rust reimplementation of the RIsearch2 search algorithm with Python bindings, ranking among the fastest tools for genome-wide RNA--RNA interaction scans; siOFF is a modern rewrite of the off-target workflow built directly on those bindings.
-RIsearch~(v3) is functionally equivalent to RIsearch2 while running 2--3$\times$ faster; siOFF installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
+\textbf{Motivation:} A substantial part of the functionality of RNA is through its interactions to other RNAs.
+Given the scale of the transcriptome there is a high demand for fast RNA interaction searches, exemplified by the application to siRNA off-target assessment.
+Furthermore, there is an increasing demand to ensure seamless interoperability with other tools, which now can be facilitated by the evolvement of the recent packaging and the Python data ecosystems.\\
+\textbf{Results:} Here, we introduce new versions of RIsearch2 and its accompanying siRNA off-target assessment pipeline.
+Both tools, RIsearch~(v3) and siOFF, have substantially improved usability, interoperability and seamless installation procedure.
+RIsearch~(v3) is now a Rust reimplementation of the RIsearch2 search algorithm with Python bindings.
+It is 2--3$\times$ faster than RIsearch2; siOFF installs with a single \texttt{pip install}, is configured from one YAML file, and completes its post-search stages substantially faster than the legacy Python~2.7 implementation.\\
 \textbf{Availability and implementation:} RIsearch and siOFF are released under the Business Source License 1.1 (source-available; free for research and production use except third-party hosted services; converts to Apache-2.0 in 2030) at \href{https://github.com/saiden89/risearch}{github.com/saiden89/risearch} and \href{https://github.com/lorenzo-22/RIsearch_pipeline}{github.com/lorenzo-22/RIsearch\_pipeline}.
 The Rust binary installs via \texttt{cargo install risearch}; the Python packages are available on PyPI as \texttt{risearch} (search core) and \texttt{sioff-rna} (off-target pipeline).\\
 \textbf{Contact:} Jan Gorodkin, \href{mailto:gorodkin@rth.dk}{gorodkin@rth.dk}}
 
-% JG: "RNA-RNA interactions", "siRNA off-target assessment"; replace "bioinformatics tooling" with "seamless interoperability".
-\keywords{RNA-RNA interaction, siRNA off-target, Rust, Python bindings, bioinformatics tooling}
+\keywords{RNA-RNA interactions, siRNA off-target assessment, Rust, Python bindings, seamless interoperability}
 
 \maketitle
 
-\section{Introduction}
+\section{Introduction and motivation}
 
-% JG: fine with renaming the heading "Introduction and motivation".
-% JG: resolve the inconsistency between "RNA--RNA interactions" and "genome-wide".
-% JG: broaden to intermolecular RNA interactions "to both RNA and DNA", with "an increasing demand for" predicting them at genome- or transcriptome-wide scale.
-% JG, add: "Whereas the RNA--RNA interactions continue with increasing attention, recent work has revealed enormous potential for RNA--DNA interactions \cite{Lambolez2026RNA}." (bib entry in reference[1].bib)
-% JG, siRNA sentence: "Even for one of the simplest tasks concerning study and usage of endogenous and synthetic siRNAs, the lack of the off-target landscape can confound RNAi knockdown experiments and for example limit therapeutic application, through unintended interactions, the off-targets."
-Intermolecular RNA--RNA interactions underpin a wide range of regulatory mechanisms, and predicting them at genome- or transcriptome-wide scale is a recurring task in RNA biology.
-The problem is particularly demanding for synthetic small interfering RNAs (siRNAs), where unintended off-target binding can confound RNAi knockdown experiments and limit therapeutic application.
+Intermolecular RNA interactions to both RNA and DNA underpin a wide range of regulatory mechanisms, and there is an increasing demand for predicting them at genome- or transcriptome-wide scale.
+Whereas the RNA--RNA interactions continue with increasing attention, recent work has revealed enormous potential for RNA--DNA interactions~\citep{Lambolez2026RNA}.
+Even for one of the simplest tasks concerning study and usage of endogenous and synthetic small interfering RNAs (siRNAs), the lack of the off-target landscape can confound RNAi knockdown experiments and for example limit therapeutic application, through unintended interactions, the off-targets.
 
-% JG: open with "To computationally search for off-targets, RIsearch2 ...".
-% JG, add after the first clause: "Since it ignores intramolecular interactions, it is in particular suitable for probing the off-target landscape of small RNAs, like siRNAs."
-% JG: drop "distributed alongside RIsearch2".
-RIsearch2~\citep{alkan2017risearch2} is a tool designed for large-scale screens of near-complementary RNA--RNA interactions: it combines a suffix-array index of the target with a seed-and-extend dynamic-programming step that uses the simplified energy model introduced by RIsearch~\citep{wenzel2012risearch}.
-The companion siRNA off-target pipeline distributed alongside RIsearch2 turns these predictions into per-transcript binding probabilities and a transcriptome-wide off-targeting potential through a partition-function model that integrates transcript abundance and binding-site accessibility.
+To computationally search for off-targets, RIsearch2~\citep{alkan2017risearch2} is a tool designed for large-scale screens of near-complementary RNA--RNA interactions.
+Since it ignores intramolecular interactions, it is in particular suitable for probing the off-target landscape of small RNAs, like siRNAs.
+RIsearch2 combines a suffix-array index of the target with a seed-and-extend dynamic-programming step that uses the simplified energy model introduced by RIsearch~\citep{wenzel2012risearch}.
+The companion siRNA off-target pipeline turns these predictions into per-transcript binding probabilities and a transcriptome-wide off-targeting potential through a partition-function model that integrates transcript abundance and binding-site accessibility.
 
-% JG: replace this paragraph and merge it into the next: "With the development of software ecosystems new opportunities have emerged that can advance over a C source tarball with a custom Makefile and Python~2.7 previously used. Here, we introduce new versions of RIsearch2 and the siRNA pipeline, redesigned for improved usability, interoperability with the latest frameworks, and leading to easier installation."
-Despite the algorithm's continued relevance, the software ecosystem has aged less well: RIsearch2 ships as a C source tarball with a custom Makefile; the off-target pipeline is written in Python~2.7, long past end of life; and neither component exposes a library API suitable for embedding in modern Python-native analyses.
+With the development of modern software ecosystems, new opportunities have emerged to improve on how RIsearch2 and its pipeline were originally distributed and used.
+Here, we introduce new versions of RIsearch2 and the siRNA pipeline, redesigned for improved usability, interoperability with the latest frameworks, and leading to easier installation.
+RIsearch~(v3) is a Rust reimplementation of the RIsearch2 search algorithm with behaviour verified against reference implementations, a redesigned command-line interface, and PyO3 Python bindings that expose search results as native Polars~\citep{polars} DataFrames.
+The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline that consumes the RIsearch~(v3) bindings directly; its source thus also serves as a worked example of embedding RIsearch in a Python analysis.
 
-% JG: "We introduce RIsearch~(v3), a Rust reimplementation ..." and "The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline that consumes the RIsearch~(v3) bindings directly".
-% JG: "ranking among the fastest tools" needs a reference to a recent benchmark.
-% JG: does not understand "it thus doubles as a reference example for users wishing to embed RIsearch in their own analyses".
-We introduce new versions of both tools, redesigned for improved usability, interoperability with modern analysis frameworks, and easier installation.
-\textbf{RIsearch}~(v3) is a Rust reimplementation of the RIsearch2 search algorithm---ranking among the fastest tools for genome-wide RNA--RNA interaction scans---with parity-tested behaviour, a redesigned command-line interface, and PyO3 Python bindings that expose search results as native Polars~\citep{polars} DataFrames.
-\textbf{siOFF} is a rewritten siRNA off-target pipeline that consumes those bindings directly; it thus doubles as a reference example for users wishing to embed RIsearch in their own analyses.
-
-% JG, caption title: "Seamless installation and execution of RIsearch and the siOFF pipeline".
-% JG: siOFF "(siRNA Off-Target pipeline)" is a "timely" (not "modern") Python~3 rewrite; "bundles the RIsearch dependencies" (not "wheel").
-% JG: write NCLS in full.
 \begin{figure*}[t]
 \centering
 \resizebox{\linewidth}{!}{\input{figures/summary}}
 \caption{
-  \textbf{Overview of RIsearch and siOFF.}
-  \textbf{(Top, blue)} \textbf{RIsearch} is a Rust reimplementation of the RIsearch2 search algorithm, installable as a single static binary via \texttt{cargo install risearch} (Crates.io) or as a Python wheel via \texttt{pip install risearch} (PyPI).
+  \textbf{Seamless installation and execution of RIsearch and the siOFF pipeline.}
+  \textbf{(Top, blue)} \textbf{RIsearch} is a Rust reimplementation of the RIsearch2 search algorithm, installable via \texttt{cargo install risearch} (Crates.io) or as a Python wheel via \texttt{pip install risearch} (PyPI).
   The core builds a suffix-array index of target sequences and runs a seed-and-extend dynamic-programming search using the simplified RIsearch energy model, producing interaction hits as a TSV file.
-  \textbf{(Bottom, green)} \textbf{siOFF} is a modern Python~3 rewrite installable with a single \texttt{pip install sioff-rna}, which bundles the RIsearch wheel, the ViennaRNA~2.7.2 Python API, and an in-memory NCLS interval index with no external binaries required.
+  \textbf{(Bottom, green)} \textbf{siOFF} (siRNA Off-Target pipeline) is a timely Python~3 rewrite installable with a single \texttt{pip install sioff-rna}, which bundles the RIsearch dependencies, the ViennaRNA~2.7.2 Python API, and an in-memory nested containment list (NCLS) interval index with no external binaries required.
   siOFF orchestrates four stages: (\textit{i})~RIsearch index and search invoked natively via PyO3 bindings; (\textit{ii})~intersection of predicted binding sites with a transcriptome annotation using an NCLS index; (\textit{iii})~per-site RNA accessibility computed through the ViennaRNA Python API; and (\textit{iv})~a per-siRNA Boltzmann partition function yielding off-target probabilities, written to a TSV output file.
   The dashed arrow indicates that siOFF calls RIsearch within the same process via the Python bindings, with no subprocess or intermediate files.
 }
 \label{fig:summary}
 \end{figure*}
 
-% JG: drop this section heading; it is still motivation, overlaps the introduction, and does not need a separate section.
-\section{Rationale for a Rust Reimplementation}\label{sec:rationale}
+A limitation of the RIsearch2 package is how it is distributed and installed: it is provided as C source code that each user must compile locally.
+RIsearch~(v3) meets three essential requirements at once:
+\begin{enumerate}
+\item retaining the genome-scale throughput that keeps whole-transcriptome screens practical;
+\item installing with a single command from a standard package registry, with no manual build;
+\item running as a safe Python library, so the off-target search seamlessly integrates with the contextual analyses.
+\end{enumerate}
+Each of these is routine in itself, but no single established language meets all three.
+C reaches that throughput but has no standard package registry of its own, so prebuilt distribution depends on external packaging, and it cannot guarantee memory safety at a library boundary; Python distributes and embeds easily, but pure Python executes the seed-search and dynamic-programming loops in an interpreter, which is far slower than compiled native code, and so cannot reach that throughput.
+However, Rust meets all three: it compiles to native code, installs from standard package registries, and exposes the algorithm through a memory-safe Python library.
+These capabilities are why we built RIsearch in Rust.
 
-% JG: "delivered" is ambiguous: distributed to the user, ease of installation, or something else? Be concrete.
-% JG: "A limitation of the RIsearch2 package is how it is delivered. Our reimplementation meets three essential requirements at once: 1) retaining whole-transcriptome screens; 2) install as a prebuilt dependency; and 3) run as a safe Python library, so the off-target search seamlessly integrates with the contextual analyses. Each of 1)-3) is routine in themselves, but no single established language meets all three."
-% JG: requirement 2) needs to be clearer.
-% JG: elaborate "in pure Python cannot reach that throughput".
-% JG: "However, Rust meets all three ..."; "These capabilities are why we built RIsearch in Rust."
-What limits RIsearch2 today is not its algorithm but how that algorithm is delivered.
-A reimplementation must meet three requirements at once: retain genome-scale throughput, so whole-transcriptome screens stay practical; install as a prebuilt dependency; and run as a safe Python library, so off-target search composes with surrounding analysis.
-Each is routine alone; no single established language meets all three.
-C reaches that throughput but has no standard way to deliver a prebuilt, installable dependency and cannot guarantee memory safety at a library boundary; Python distributes and embeds easily but in pure Python cannot reach that throughput.
-Rust meets all three: it compiles to native code, installs as a prebuilt package, and exposes the algorithm through a memory-safe Python library.
-That combination is why we built RIsearch in Rust.
+\section{RIsearch reimplementation}\label{sec:core}\label{subsec:pybindings}
 
-% JG: "Core" is unclear; suggests "RIsearch re-implementation" as the heading.
-\section{RIsearch Core Implementation}\label{sec:core}\label{subsec:pybindings}
-
-% JG: "RIsearch is a reimplementation of the RIsearch2 seed-and-extend pipeline. Here, targets are concatenated ..."
-% JG: make clear libsais is new in v3 (RIsearch2 was published before 2021).
-% JG: "predicted hybridisation energies" -> "calculated hybridisation energies".
-RIsearch reimplements the RIsearch2 seed-and-extend pipeline.
-Targets are concatenated and indexed in a suffix array, built in linear time by libsais~\citep{libsais}, and each query is scanned against the index for near-complementary seeds, with a configurable number of mismatches and, optionally, G--U wobble pairs (\texttt{-{}-seed-wobble}).
+RIsearch is a reimplementation of the RIsearch2 seed-and-extend pipeline.
+Here, targets are concatenated and indexed in a suffix array, built in linear time by libsais~\citep{libsais} in place of the libdivsufsort library~\citep{libdivsufsort} used by RIsearch2, and each query is scanned against the index for near-complementary seeds, with a configurable number of mismatches and, optionally, G--U wobble pairs.
 Seeds are extended in both directions with Gotoh's three-state affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a nearest-neighbour dinucleotide model and penalising bulges and internal loops.
-The algorithm and energy model are unchanged, so predicted hybridisation energies match those of RIsearch2.
+The search algorithm and energy model are unchanged, but the energy parameter tables were regenerated from ViennaRNA duplex energies, so calculated hybridisation energies differ from those of RIsearch2.
 
-% JG: heading -> "Seamless installation".
-\subsection*{Easier to install}
+\subsection*{Seamless installation}
 
-% JG: drop "only"; give examples of the standard registries.
-RIsearch2 is distributed only as a C source tarball with a custom Makefile, so every user compiles it locally, which presumes a C toolchain and leaves build flags and dependency versions to each machine.
-The new version, by contrast, installs as a prebuilt package from standard registries, either a precompiled PyPI wheel via \texttt{pip install risearch} or a \texttt{cargo install risearch} build from Crates.io with dependencies version-locked.
-The result is a single self-contained binary that installs in one command and behaves identically across machines.
+RIsearch2 is distributed as C source code that each user must compile by hand, which requires a C toolchain and leaves build settings and dependency versions to each machine.
+The new version needs no manual build: it installs with a single command from the Python and Rust package registries, \href{https://pypi.org/project/risearch/}{PyPI} and \href{https://crates.io/crates/risearch}{Crates.io}, or as a prebuilt binary from each \href{https://github.com/saiden89/risearch/releases}{GitHub release}.
 
-% JG: heading -> "Improved usability".
-\subsection*{Easier to use}
+\subsection*{Improved usability}
 
-% JG: can the user no longer look at suboptimal matches?
-% JG: describe how the collapsing is done, on which criteria (and their justification), with an example.
-% JG: what precisely does "It" refer to?
-% JG: how is the input validation done? The sentence is too implicit.
-Where RIsearch2 can return many overlapping alignments for one duplex, RIsearch reports a single lowest-energy alignment, collapsing the seeds that extend to the same site, and the reported hit set does not depend on the number of threads.
-It validates its inputs up front and, on malformed data, reports a specific error that names the offending record, character, or row rather than failing obscurely.
-The command line is rebuilt around task-oriented subcommands, and legacy RIsearch2 flags are still accepted so existing scripts keep working; the one behavioural difference is that G--U wobble pairs in seeds, always on in RIsearch2, are now opt-in.
+Where RIsearch2 can return many overlapping alignments for one duplex, RIsearch by default reports one alignment per duplex: seed extensions that end on exactly the same query and target coordinates are collapsed to the one with the lowest (most favorable) energy.
+For example, two seeds at neighbouring positions of an siRNA that extend to the same duplex yield one row instead of two near-identical ones, unless collapsing is disabled.
+RIsearch also validates its inputs more strictly than RIsearch2, rejecting malformed input with an error that names the offending record or line.
+The command line is rebuilt around task-oriented subcommands, and legacy RIsearch2 flags are still accepted to ease migration of existing scripts; G--U wobble pairs in seeds, always on in RIsearch2, are now opt-in.
 
-% JG: heading -> "Enhanced interoperability".
-\subsection*{Easier to integrate}
+\subsection*{Enhanced interoperability}
 
-% JG: "At the time of implementation of RIsearch2, API libraries were not mainstream in bioinformatics, so embedding it in a Python analysis meant ..."; "The new version of RIsearch instead ships ...".
-% JG: fix the code block running across the columns.
-RIsearch2 exposed no library API, so embedding it in a Python analysis meant spawning a subprocess and parsing its text output.
-RIsearch instead ships PyO3 bindings in the same wheel: \texttt{risearch.index()} builds an on-disk index, \texttt{risearch.TargetRegistry.open()} loads it as a reusable memory-mapped handle, and \texttt{risearch.search()} returns hits as a Polars DataFrame through the Arrow C stream interface, with no intermediate files and no text parsing:
+RIsearch2 was designed as a standalone command-line tool, so embedding it in a Python analysis meant spawning a subprocess and parsing its text output.
+The new version of RIsearch instead ships PyO3 bindings in the same wheel: \texttt{risearch.index()} builds an on-disk index, \texttt{risearch.TargetRegistry.open()} loads it as a reusable memory-mapped handle, and \texttt{risearch.search()} returns hits as a Polars DataFrame through the Arrow C stream interface, with no intermediate files and no text parsing:
 
 \begin{verbatim}
 import risearch
@@ -158,27 +126,20 @@ store = risearch.TargetRegistry.open("index/")
 df = risearch.search(queries, store, matrix="t04")
 \end{verbatim}
 
-% JG: this sentence is hard to understand and too implicit; readers not knowing RIsearch2 internals cannot follow, e.g. what is t04?
-Searches release Python's global interpreter lock, so they run concurrently with other work in the same process, and the energy parameter set is selectable per call, defaulting to \texttt{t04}.
+Searches run without blocking other Python threads in the same process, and the energy parameter set can be chosen per call; the default, \texttt{t04}, is the Turner 2004 RNA--RNA nearest-neighbour parameter set~\citep{mathews2004incorporating,turner2010nndb}.
 
-% JG: what is easier and what extension is it? Needs to be more concrete.
-\subsection*{Easier to extend}
+\subsection*{Extensible energy parameters and engine}
 
-% JG: "energy models are data rather than code" is factually wrong; it refers to the energy parameters, not the model.
-% JG: the whole sentence is cryptic and does not meet the audience's prerequisites; be more explicit and rephrase.
-Energy models are data rather than code: each parameter set is declared in a manifest with its published provenance and validated at build time, so supporting new thermodynamic parameters is a data file rather than an engine change.
-The engine itself is modular, with source available, and its behaviour is verified against independent reference implementations through property-based and metamorphic tests, complemented by mutation testing and bounded model-checking proofs (Kani), so contributors can extend it and re-verify its behaviour with confidence.
+The energy parameters are stored as tables separate from the search code: the bundled sets are generated from ViennaRNA by a script in the RIsearch repository, and users can load their own table at run time, so new thermodynamic parameters require no change to the search engine.
+The engine itself is modular, and its behaviour is verified against independent reference implementations through property-based and metamorphic tests, complemented by mutation testing and bounded model-checking proofs (Kani), so contributors can extend it and re-verify its behaviour with confidence.
 
-% JG: heading -> "Faster execution time".
-\subsection*{Performance}
+\subsection*{Faster execution time}
 
-% JG: state "Tested on the [MACHINE ARCHITECTURE SPECS] and on precisely the same input".
-% JG: point to precisely where in the Supplementary Methods.
-On equivalent inputs, RIsearch is $2$--$3\times$ faster than RIsearch2 (Supplementary Figures~\ref*{supp-fig:risearch-comparison}--\ref*{supp-fig:risearch-compression-scaling}; dataset, protocol, and full results in Supplementary Methods).
-Its suffix array is also built in parallel across cores, about $2\times$ faster than RIsearch2's single-threaded libdivsufsort~\citep{libdivsufsort} construction on the hg38 genome (Supplementary Figure~\ref*{supp-fig:indexing}).
+On an AMD EPYC~9554 server, with both tools searching the same 63 siRNAs against the same chromosome-X transcript set, RIsearch is $2$--$3\times$ faster than RIsearch2 (Supplementary Figures~\ref*{supp-fig:risearch-comparison}--\ref*{supp-fig:risearch-compression-scaling}; Supplementary Methods, ``RIsearch core search benchmark'').
+Its suffix array is also built in parallel across cores, about $2\times$ faster than RIsearch2's single-threaded libdivsufsort construction on the hg38 genome (Supplementary Figure~\ref*{supp-fig:indexing}; Supplementary Methods, ``Index construction'').
 The on-disk index is memory-mapped and read without deserialisation, so a multi-gigabyte genome index is available immediately and shared across processes by the operating system, rather than read into memory on every run.
 
-% JG: heading -> "siOFF: A re-implemented siRNA Off-Target assessment pipeline".
+% JG: heading -> "siOFF: A reimplemented siRNA Off-Target assessment pipeline".
 % JG: "Our siOFF (siRNA off-target assessment pipeline) is a complete reimplementation of the siRNA off-target pipeline introduced by \citet{alkan2017risearch2}"; "porting" -> "adapting".
 % JG: the "three practical barriers" sentence repeats the introduction; here the text must be more elaborate than a repeat.
 % JG: point to precisely where in the Supplementary Methods.
@@ -202,7 +163,7 @@ For large screens, siOFF integrates natively with Slurm: one orchestrator submit
 
 % JG: "... (default 37 C) has now been implemented [CHRISTIAN: add a couple of lines on how the implementation was done]. The temperature implementation propagates to ..."
 % JG: point to precisely where in the Supplementary Methods.
-A single \texttt{-{}-temperature} option (default $37\,^\circ$C) propagates to both the ViennaRNA accessibility calculation and the Boltzmann partition function, so that hybridisation and opening energies are always evaluated on a consistent thermodynamic scale---directly replicating the intent of the original RIsearch model~\citep{wenzel2012risearch} while exposing the folding condition as a first-class parameter (Supplementary Methods).
+A single temperature option (default $37\,^\circ$C) propagates to both the ViennaRNA accessibility calculation and the Boltzmann partition function, so that hybridisation and opening energies are always evaluated on a consistent thermodynamic scale---directly replicating the intent of the original RIsearch model~\citep{wenzel2012risearch} while exposing the folding condition as a first-class parameter (Supplementary Methods).
 
 % JG: this is the second time this heading is used.
 % JG: drop the first sentence; the paragraph repeats what was said before, go a little deeper.
@@ -222,32 +183,29 @@ Separately, the one-time genome-wide accessibility pre-computation---folding the
 
 \section{Final Remarks}
 
-% JG draft: "Here, we have exploited the emerging possibilities of new software ecosystems and made successful re-implementations of RIsearch and the siOFF pipeline leading to a multitude of enhancements including installation procedure, maintenance, integration with other tools and speed."
-% 1 short paragraph: what's available, who benefits, what's next (pooled-siRNA
-% off-targeting potential, further integration targets).
+Here, we have exploited the emerging possibilities of new software ecosystems to reimplement RIsearch and the siOFF pipeline, with enhancements in installation, maintenance, integration with other tools and speed.
+Both tools can be used from the command line and within Python workflows by anyone screening RNA interactions or siRNA off-targets at transcriptome scale.
+Future work will extend siOFF to the combined off-targeting potential of pooled siRNAs and integrate RIsearch with further analysis frameworks.
 
-% JG: comment out the Acknowledgments section.
-\section{Acknowledgments}
 
 \section{Author contributions statement}
-% JG: "S.R. re-implemented RIsearch2 in Rust and provided the framework for the siOFF pipeline."
-% JG: L.F. "drafted" (not "wrote") the manuscript and the supplementary "methods" (not "files"); drop "and generated all figures".
-% JG: figures are part of drafting manuscript and supplement; that is usually not detailed, nor is the supplementary material.
-% JG: "C.A. implemented the temperature option and tested the software. J.G. supervised the project. All authors commented, contributed and approved the final manuscript."
-L.F. designed and implemented the siOFF pipeline, ran 
-all benchmarks, wrote the manuscript and the supplementary files, and generated all figures.
+S.R. reimplemented RIsearch2 in Rust and provided the framework for the siOFF pipeline.
+L.F. designed and implemented the siOFF pipeline, ran all benchmarks, and drafted the manuscript.
+C.A. designed the temperature option and tested the software.
+J.G. supervised the project.
+All authors commented, contributed and approved the final manuscript.
 
 \section{Funding}
-% JG: drop "project is part of the ENSAFE consortium project"; "This was supported by the Novo Nordisk Foundation (NNF24OC0087112)."
-This project is part of the ENSAFE consortium project supported by the Novo Nordisk Foundation (NNF24OC0087112).
+This work was supported by the Novo Nordisk Foundation (NNF24OC0087112).
 
 \section{Conflict of interest}
 None declared.
 
-% JG: heading -> "Code and Data availability".
 % JG: is the benchmark data the same as in RIsearch2? If so we should not redistribute it.
-% JG: "The source code for RIsearch and siOFF is available at multiple places: http://rth.dk/resources/risearch/; [list the other URLs]."
-\section{Data availability}
+\section{Code and data availability}
+%TODO: update when transfer ownership happens.
+The source code for RIsearch and siOFF is available on GitHub (\faGithub~\href{https://github.com/saiden89/risearch}{saiden89/risearch}, \faGithub~\href{https://github.com/lorenzo-22/siOFF}{lorenzo-22/siOFF}), and the packages on PyPI (\faPython~\href{https://pypi.org/project/risearch/}{risearch}, \faPython~\href{https://pypi.org/project/sioff-rna/}{sioff-rna}) and Crates.io (\faRust~\href{https://crates.io/crates/risearch}{risearch}).
+All distribution channels are summarised at \faGlobe~\href{http://rth.dk/resources/risearch/}{rth.dk/resources/risearch}.
 % RIsearch and siOFF source code is available at [GitHub URL]. Benchmark datasets and scripts
 % used to reproduce the results in this paper are deposited at [Zenodo DOI].
 

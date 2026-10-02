@@ -1,16 +1,13 @@
-# RIsearch and RIOT — manuscript
+# RIsearch and siOFF — manuscript
 
 LaTeX source for the *Bioinformatics* Application Note:
 
-> **RIsearch and RIOT: An integrated, high-performance framework for RNA–RNA
-> interaction and siRNA off-target prediction**
+> **RIsearch and siOFF: An integrated, high-performance framework for RNA–RNA interaction and siRNA off-target assessment**
 > Stefano Roncelli, Lorenzo Favaro, Christian Anthon, Jan Gorodkin
-> Section for Health Data Science and AI, Department of Public Health,
-> University of Copenhagen.
+> Center for non-coding RNA in Technology and Health, Section for Health Data Science and AI, Department of Public Health, University of Copenhagen.
 
-This repository holds the paper source only. The software it describes lives
-elsewhere: the Rust search core (`risearch`) and the siRNA off-target pipeline
-(`RIOT`).
+This repository holds the paper source only.
+The software it describes lives elsewhere: the Rust search core (`risearch`) and the siRNA off-target pipeline (`siOFF`).
 
 ## Build
 
