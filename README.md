@@ -40,7 +40,7 @@ using the same pinned engine.
 
 | Path | What |
 |------|------|
-| `main.tex` | Main document; inputs `frontmatter`, `body`, `backmatter` |
+| `main.tex` | Main document: front matter, body, and back matter |
 | `supplementary.tex` | Supplementary material, self-contained (compiled separately) |
 | `reference.bib` | Bibliography |
 | `figures/` | Figures (PNG) |
