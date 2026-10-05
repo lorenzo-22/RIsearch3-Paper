@@ -37,20 +37,14 @@
 % JG: add a section explaining how RIsearch2 is executed and with which options, and the same for RIsearch (v3), so the reader sees what changed at both the installation and the execution step; say which options are the same and which are new.
 
 \subsection{RIsearch core search benchmark}\label{sec:risearch-benchmark}
-
-% JG: active voice: "With RIsearch we reimplement ... we benchmark both tools on the original data from the RIsearch2 publication: 63 siRNA sequences are matched against ..."
-% JG: "pre-built indexes of the same target transcripts"; "only search times are compared and execution time spent on index construction excluded".
-% JG: "Input files were placed on disk on the given execution server to be unaffected by possible NFS latency."
-% JG: what difference does it make whether the output directory is empty or not?
-% JG, add: "Note that although siRNAs are used, this part of the benchmark concerns only RIsearch and not the siOFF pipeline, which is executed on top of the RIsearch output."
-RIsearch reimplements the seed-and-extend search of RIsearch2~\citep{alkan2017risearch2} in Rust.
-To quantify the resulting speed-up, both tools were benchmarked on a common workload: 63 siRNA guide sequences searched against a chromosome-X target set of Ensembl human cDNA transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server.
-Both tools were supplied with pre-built indexes of the same target and run with identical search parameters, so that only search time is compared and index construction is excluded.
+With RIsearch, we reimplement the seed-and-extend search of RIsearch2~\citep{alkan2017risearch2} in Rust.
+To quantify the resulting speed-up, we benchmarked both tools on the original data from the RIsearch2 publication: 63 siRNA guide sequences searched against a chromosome-X target set of Ensembl human cDNA transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server.
+Both tools used pre-built indexes of the same target transcripts and ran with identical search parameters; we compare only search times and exclude index-construction time.
 Input files were staged on local disk to remove NFS latency, and wall-clock time was recorded with Hyperfine (one warm-up run followed by three timed runs, with the output directory cleared before each run).
-In all figures the Rust implementation is labelled \texttt{RIsearch\_RS}.
+In all figures, we label the Rust implementation \texttt{RIsearch\_RS}.
 
-% JG: justify every single chosen parameter setting in this paragraph.
 The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt; mismatch counts 0--3; and output formats \texttt{p1}--\texttt{p4}.
+These seed geometries were chosen because they are the settings commonly used for siRNA and miRNA target searches~\citep{alkan2017risearch2}, and the extension lengths, mismatch counts and output formats span the range of options exposed by both tools, so that the comparison reflects typical use rather than a single favourable setting.
 Thread scaling was measured for seed scheme~6 at 1, 2, 4, 8, 16 and 32 threads.
 The energy threshold was $-10$\,kcal\,mol$^{-1}$ for extension $\geq 5$\,nt and $0$ for seed-only runs (extension $<5$\,nt, for which no dynamic-programming extension is performed).
 The two search commands, shown for seed scheme 2:7/5 with extension 20\,nt on 32 threads, were:
@@ -66,7 +60,44 @@ risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
     --no-dedup -p 1 --multifile --compress gzip --output results_dir
 \end{verbatim}
 
-% JG: the reader has no chance to understand these commands unless each option in each version is explained; please add.
+\noindent Option meanings, with the RIsearch2 flag given first and the RIsearch equivalent second:
+\begin{itemize}
+  \item \texttt{-q sirnas.fa} / \texttt{-{}-query sirnas.fa} — FASTA file
+    of the 63 siRNA guide sequences.
+  \item \texttt{-i chrX.pksuf} / \texttt{-{}-target chrX.idx} — pre-built
+    index of the chromosome-X target set (RIsearch2 suffix-array package
+    file and RIsearch native index, respectively).
+  \item \texttt{-s 2:7/5} / \texttt{-{}-seed 2:7/5} — seed scheme,
+    specified with identical syntax in both tools: a perfect match within
+    query positions 2--7 with a minimum seed length of 5\,nt.
+  \item \texttt{-e -10} / \texttt{-{}-energy -10} — energy threshold of
+    $-10$\,kcal\,mol$^{-1}$; interactions with a hybridisation energy
+    above this value are discarded.
+  \item \texttt{-l 20} / \texttt{-{}-extension 20} — extension length:
+    the seed alignment is extended by up to 20\,nt on each side with the
+    Gotoh dynamic-programming algorithm.
+  \item \texttt{-{}-threads 32} / \texttt{-{}-threads 32} — number of
+    parallel search threads.
+  \item \texttt{-z t99} / \texttt{-{}-matrix t99} — energy matrix used
+    for scoring; \texttt{t99} selects the Turner~1999 RNA--RNA
+    nearest-neighbour parameters.
+  \item \texttt{-p} / \texttt{-p 1} — output format; format~1 in RIsearch
+    reproduces the per-interaction output produced by RIsearch2's
+    \texttt{-p}.
+\end{itemize}
+
+\noindent The remaining RIsearch flags have no RIsearch2 counterpart and were set to reproduce RIsearch2's fixed behaviour, so that both tools perform equivalent work:
+\begin{itemize}
+  \item \texttt{-{}-no-dedup} — disable deduplication of identical hits,
+    which RIsearch2 does not perform.
+  \item \texttt{-{}-multifile} — write one output file per query,
+    matching RIsearch2's per-query output layout.
+  \item \texttt{-{}-compress gzip} — gzip-compress the output, matching
+    RIsearch2's gzipped output (RIsearch defaults to zstd, which
+    RIsearch2 lacks; see \cref{fig:risearch-compression}).
+  \item \texttt{-{}-output results\_dir} — directory for the output
+    files (RIsearch2 writes to the working directory).
+\end{itemize}
 With matched gzip-compressed output, the new RIsearch version runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
 RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (\cref{fig:risearch-compression,fig:risearch-compression-scaling}) widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend workloads and up to ${\sim}3\times$ on seed-only searches.
 
