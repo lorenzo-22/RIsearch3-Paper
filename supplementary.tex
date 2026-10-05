@@ -32,13 +32,11 @@
 \setcounter{section}{0}
 \renewcommand{\thesection}{S\arabic{section}}
 
-% JG: split "Supplementary Methods" into "Methods" and "Results"; the first section below is results, not methods.
-% JG: within the Supplementary Material, "Supplementary" in the heading is redundant.
-\section*{Supplementary Methods}
+\section{Results}\label{sec:results}
 
 % JG: add a section explaining how RIsearch2 is executed and with which options, and the same for RIsearch (v3), so the reader sees what changed at both the installation and the execution step; say which options are the same and which are new.
 
-\subsection*{RIsearch core search benchmark}
+\subsection{RIsearch core search benchmark}\label{sec:risearch-benchmark}
 
 % JG: active voice: "With RIsearch we reimplement ... we benchmark both tools on the original data from the RIsearch2 publication: 63 siRNA sequences are matched against ..."
 % JG: "pre-built indexes of the same target transcripts"; "only search times are compared and execution time spent on index construction excluded".
@@ -142,7 +140,7 @@ RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; subs
 \label{fig:risearch-compression-scaling}
 \end{figure}
 
-\subsection*{Index construction}
+\subsection{Index construction}\label{sec:index-benchmark}
 
 RIsearch builds its suffix-array index in parallel across cores with libsais~\citep{libsais}, whereas RIsearch2's libdivsufsort construction is single-threaded.
 Building the GRCh38/hg38 index was benchmarked against RIsearch2 with Hyperfine (\cref{fig:indexing}).
@@ -164,7 +162,83 @@ When the index is written to disk, RIsearch is already ${\sim}1.5\times$ faster 
 \label{fig:indexing}
 \end{figure}
 
-\subsection*{siOFF pipeline stages and partition-function model}
+\subsection{siOFF pipeline benchmark}\label{sec:pipeline-benchmark}
+
+Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 pipeline (\cref{fig:pipeline}A).
+Peak resident-set size of the parent process plateaus at $\approx$7\,GB regardless of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size increases (\cref{fig:pipeline}B).
+The benchmark dataset, genome indexing, expression annotation, and timing protocol are described in \cref{sec:benchmark-dataset,sec:genome-indexing,sec:expression-annotation,sec:benchmark-protocol}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\caption{
+  \textbf{Wall-clock time and peak memory of siOFF versus the legacy pipeline
+  across batch sizes.}
+  Each box spans the interquartile range of five independent randomised trials;
+  the central line marks the median; whiskers extend to the full range.
+  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
+  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
+  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
+  library~\citep{huesken2005design}.
+  siOFF achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  Python~2.7 implementation.
+  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
+  by \texttt{/usr/bin/time -v}.
+  siOFF plateaus at $\approx$7\,GB regardless of batch size;
+  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
+  size increases.
+  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
+  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
+  predictions were provided as input so that search time is excluded from
+  both measurements.
+}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Accessibility pre-computation benchmark}\label{sec:accessibility-benchmark}
+
+Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and siOFF's \texttt{accessibility} subcommand (\cref{fig:accessibility}, \cref{tab:acc-bench}; implementation details in \cref{sec:accessibility-method}).
+siOFF completes the full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
+The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/accessibility_benchmark}
+\caption{
+  \textbf{Full-genome accessibility pre-computation: legacy script versus
+  siOFF's \texttt{accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$,
+  64 workers). \textbf{(A)}~Wall-clock time: siOFF folds the whole genome in
+  8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt{RNAplfold} script
+  ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
+  111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
+  single compressed two-strand Parquet file rather than two uncompressed binary
+  files. Peak memory (not shown) is given in \cref{tab:acc-bench}.
+}
+\label{fig:accessibility}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Full-genome accessibility pre-computation: legacy script versus
+siOFF's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
+64 workers).}
+\label{tab:acc-bench}
+\small
+\begin{tabular}{lrr}
+\toprule
+Metric & Legacy & New \\
+\midrule
+Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
+Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
+On-disk profile size & 192.6\,GB    & 111.8\,GB \\
+Files per chromosome & 2            & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Methods}\label{sec:methods}
+
+\subsection{siOFF pipeline stages and partition-function model}\label{sec:pipeline-stages}
 
 The four-stage model of \citet{alkan2017risearch2} is preserved.
 In the first stage, siRNA--target interaction predictions are generated by calling \texttt{risearch.index()} to build the suffix-array index of the target and \texttt{risearch.search()} to locate binding sites, both invoked directly through the Python bindings, returning results as a Polars DataFrame in the same process with no intermediate files on disk.
@@ -186,21 +260,21 @@ Per-transcript off-targeting probabilities $p_{\mathrm{off},i} = W_i / Z_s$ are 
 Parametric sweeps over $\alpha$, $\gamma$, and $\theta$ are resolved in a single aggregation pass rather than repeated sequential iterations.
 In the fourth stage, results are written incrementally as each siRNA completes, in TSV, CSV, or Parquet format.
 
-\subsection*{Parallelism and memory}
+\subsection{Parallelism and memory}\label{sec:parallelism}
 
 When processing a directory of per-siRNA prediction files, siOFF distributes work across a configurable process pool.
 A spawn-based multiprocessing context is used to avoid interaction with the Rayon thread pool used internally by Polars.
 The expression annotation is loaded once into Arrow IPC format and memory-mapped into each worker process via the operating-system page cache, keeping peak memory proportional to a single annotation copy regardless of worker count.
 Each worker performs the intersection, accessibility lookup, and partition-function evaluation for one siRNA at a time; prediction files are parsed lazily so that only filtered, selected columns are materialised, and output is streamed to disk incrementally throughout a batch run.
 
-\subsection*{Benchmark dataset}
+\subsection{Benchmark dataset}\label{sec:benchmark-dataset}
 
 The benchmark uses a subset of the genome-wide siRNA efficacy library of \citet{huesken2005design}, which comprises 2{,}431 chemically synthesised 21-mer siRNAs targeting 34 human genes, with experimentally measured knockdown efficacies obtained in the H1299 non-small-cell lung carcinoma cell line.
 A master set of 2{,}000 siRNAs was drawn by uniform random sampling (without replacement) from this library; smaller batch sizes of 1{,}000 and 500 were produced by further subsampling from this master set, with a fresh random draw for each of the five independent benchmark iterations.
 Target sequences for the off-target search were derived from the GRCh38/hg38 reference genome (UCSC assembly, December 2013).
 Expression values were taken from an H1299 RNA-seq experiment (ArrayExpress accession E-MTAB-2770), converted to per-transcript read counts and stored in BED format.
 
-\subsection*{Genome indexing and RIsearch2 binding-site search}
+\subsection{Genome indexing and RIsearch2 binding-site search}\label{sec:genome-indexing}
 
 The hg38 reference genome was indexed with RIsearch2 to produce a suffix-array package file (\texttt{hg38.pksuf}):
 
@@ -243,7 +317,7 @@ risearch2.x \
   \item \texttt{--verbose} — write progress information to standard error.
 \end{itemize}
 
-\subsection*{H1299 expression annotation}
+\subsection{H1299 expression annotation}\label{sec:expression-annotation}
 
 Per-transcript expression weights for the H1299 (NCI-H1299, large-cell lung carcinoma) cell line were derived from the RNA-seq dataset E-MTAB-2770 (\textit{RNA-Seq of 675 human cancer cell lines}, CCLE), which is archived at ArrayExpress and contains data for approximately 675 cancer cell lines.
 
@@ -293,7 +367,7 @@ Of the 385{,}659 transcripts, 143{,}881 (37.3\%) carried TPM $> 0$, consistent w
 Transcripts with TPM $= 0$ are retained in the file because the intersection service reads the annotation as a single indexed structure; dropping unexpressed entries would misalign row offsets.
 The high GAPDH TPM (ENST00000229239.10: 6{,}130) confirms biologically plausible quantification.
 
-\subsection*{Benchmark protocol}
+\subsection{Benchmark protocol}\label{sec:benchmark-protocol}
 
 Timing and peak-memory measurements were collected on a server equipped with an AMD EPYC~9554 processor (64 physical cores, 128 threads) and sufficient RAM to keep all input files resident.
 Both pipelines used 32 parallel workers (\texttt{-j~32} for GNU parallel in the legacy case; \texttt{-j~32} process-pool workers for the new pipeline).
@@ -304,79 +378,15 @@ Because both pipelines spawn independent child processes (GNU~parallel in the le
 
 For batch sizes of 1{,}000 and 500, each of the five timed runs used an independently drawn random subset of the master 2{,}000-siRNA set, ensuring that variance estimates reflect genuine sampling variability rather than run-to-run measurement noise alone.
 Pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
+The results of this benchmark are presented in \cref{sec:pipeline-benchmark}.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\linewidth]{figures/pipeline_comparison}
-\caption{
-  \textbf{Wall-clock time and peak memory of siOFF versus the legacy pipeline
-  across batch sizes.}
-  Each box spans the interquartile range of five independent randomised trials;
-  the central line marks the median; whiskers extend to the full range.
-  \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
-  annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
-  and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
-  library~\citep{huesken2005design}.
-  siOFF achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
-  Python~2.7 implementation.
-  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
-  by \texttt{/usr/bin/time -v}.
-  siOFF plateaus at $\approx$7\,GB regardless of batch size;
-  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
-  size increases.
-  Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
-  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
-  predictions were provided as input so that search time is excluded from
-  both measurements.
-}
-\label{fig:pipeline}
-\end{figure}
-
-\subsection*{Accessibility pre-computation}
+\subsection{Accessibility pre-computation}\label{sec:accessibility-method}
 
 The legacy pipeline computed per-nucleotide RNA opening energies with a Python~2.7 script that wrapped the \texttt{RNAplfold} executable (ViennaRNA~2.6.3) as a subprocess, emitting two flat \texttt{uint8} binary files per chromosome (one per strand).
 siOFF's \texttt{accessibility} subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning subprocesses: for each chromosome the call \texttt{RNA.fold\_compound(...).probs\_window(...)} returns per-position unpaired-probability vectors at the specified temperature (default $37\,^\circ$C, set via \texttt{-{}-temperature}), from which opening energies $O_i = -RT\ln p_i$ are computed in-process and written as a single per-chromosome Apache Parquet file with columnar compression and zero-copy Arrow reads.
+The corresponding full-genome benchmark is reported in \cref{sec:accessibility-benchmark}.
 
-\paragraph{Accessibility pre-computation benchmark.}
-Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and siOFF's \texttt{accessibility} subcommand (\cref{fig:accessibility}, \cref{tab:acc-bench}).
-siOFF completes the full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
-The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\linewidth]{figures/accessibility_benchmark}
-\caption{
-  \textbf{Full-genome accessibility pre-computation: legacy script versus
-  siOFF's \texttt{accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$,
-  64 workers). \textbf{(A)}~Wall-clock time: siOFF folds the whole genome in
-  8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt{RNAplfold} script
-  ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
-  111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
-  single compressed two-strand Parquet file rather than two uncompressed binary
-  files. Peak memory (not shown) is given in \cref{tab:acc-bench}.
-}
-\label{fig:accessibility}
-\end{figure}
-
-\begin{table}[ht]
-\centering
-\caption{Full-genome accessibility pre-computation: legacy script versus
-siOFF's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
-64 workers).}
-\label{tab:acc-bench}
-\small
-\begin{tabular}{lrr}
-\toprule
-Metric & Legacy & New \\
-\midrule
-Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
-Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
-On-disk profile size & 192.6\,GB    & 111.8\,GB \\
-Files per chromosome & 2            & 1 \\
-\bottomrule
-\end{tabular}
-\end{table}
-\section*{Temperature dependent energy parameters}
+\section{Temperature dependent energy parameters}\label{sec:energy-params}
 Notation, N indicates an unknown nucleotide.
 In the stacking energies, the N is substituted with a nucleotide (ACGT/U) giving the stack the highest possible energy. \_ indicates gap, a missing nucleotide, at the corresponding position, that is a bulge on the strand opposite the gap.
 \begin{verbatim}
