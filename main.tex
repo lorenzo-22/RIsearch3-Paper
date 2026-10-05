@@ -139,11 +139,9 @@ On an AMD EPYC~9554 server, with both tools searching the same 63 siRNAs against
 The suffix array creation rewrite also yielded about $2\times$ faster execution times (Supplementary Figure~\ref*{supp-fig:indexing}; Supplementary Methods, ``Index construction'').
 Because on-disk index is now memory-mapped and read without deserialisation, multi-gigabyte genome indexes are  available immediately and shared across processes by the operating system, rather than read into memory on every run.
 
-% JG: "Our siOFF (siRNA off-target assessment pipeline) is a complete reimplementation of the siRNA off-target pipeline introduced by \citet{alkan2017risearch2}"; "porting" -> "adapting".
 % JG: the "three practical barriers" sentence repeats the introduction; here the text must be more elaborate than a repeat.
-% JG: point to precisely where in the Supplementary Methods.
 \section{siOFF: A reimplemented siRNA Off-Target assessment pipeline}\label{sec:pipeline}
-Alongside the new version of RIsearch, we distribute \textbf{siOFF}, a complete reimplementation of the siRNA off-target pipeline of \citet{alkan2017risearch2} (\cref{fig:summary}).
+Alongside the new version of RIsearch, we distribute \textbf{siOFF}, a complete reimplementation of the siRNA off-target pipeline introduced by \citet{alkan2017risearch2} (\cref{fig:summary}).
 Beyond adapting the workflow from Python~2.7 to Python~3, the rewrite targets three practical barriers that limited adoption of the original tool: installation, ease of use, and integration into existing workflows.
 The underlying four-stage thermodynamic model---search, annotation intersection, accessibility, and a per-siRNA Boltzmann partition function---is preserved unchanged and described in full in \ref*{supp-sec:pipeline-stages}.
 
