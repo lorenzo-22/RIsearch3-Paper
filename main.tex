@@ -56,7 +56,7 @@ Both software packages are available on PyPI as \texttt{risearch} and \texttt{si
 
 Intermolecular RNA interactions with both RNA and DNA underpin a wide range of regulatory mechanisms, and demand is increasing for predicting them at genome- or transcriptome-wide scale.
 Whereas the RNA--RNA interactions continue with increasing attention, recent work has revealed enormous potential for RNA--DNA interactions~\citep{Lambolez2026RNA}.
-Even for simple tasks concerning the study and use of endogenous and synthetic small interfering RNAs (siRNAs), the lack of the off-target landscape can confound RNAi knockdown experiments and, for example, limit therapeutic application through unintended interactions with off-targets.
+When studying and using endogenous and synthetic small interfering RNAs (siRNAs), the lack of the off-target landscape can confound RNAi knockdown experiments and, for example, limit therapeutic application through unintended interactions with off-targets.
 
 RIsearch2~\citep{alkan2017risearch2} is a tool designed for large-scale screens of near-complementary RNA--RNA interactions.
 Because it ignores intramolecular interactions, it is particularly suitable for probing the off-target landscape of small RNAs, like siRNAs.
@@ -66,7 +66,7 @@ The companion siRNA off-target pipeline turns these predictions into per-transcr
 With the development of modern software ecosystems, new opportunities have emerged to improve how RIsearch2 and its pipeline were originally distributed and used.
 Here, we introduce new versions of RIsearch2 and the siRNA pipeline, completely redesigned for improved usability, interoperability, installation, and development.
 RIsearch~(v3) is a faster and memory-safe reimplementation of the same core search algorithm, while also providing a redesigned command-line interface, and PyO3 Python bindings.
-The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline and can now consume the RIsearch~(v3) bindings directly; the pipeline also serves as an example of using RIsearch embeddings and integrating them into a Python workflow.
+The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline and can now use the RIsearch~(v3) bindings directly; it also serves as an example of using RIsearch embeddings and integrating them into a Python workflow.
 
 \begin{figure*}[t]
 \centering
