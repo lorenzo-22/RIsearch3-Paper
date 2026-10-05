@@ -82,7 +82,7 @@ The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-tar
 \label{fig:summary}
 \end{figure*}
 
-A limitation of the original RIsearch2 package is how it is distributed and installed, as it is provided as C source code that each user must compile locally.
+A limitation of the original RIsearch2 package is its distribution and installation: it is provided as C source code that each user must compile locally.
 RIsearch~(v3) improves on these aspects while meeting three essential requirements at once:
 \begin{enumerate}
 \item retaining the genome-scale throughput that keeps whole-transcriptome screens practical;
@@ -96,7 +96,7 @@ These capabilities are why we rebuilt RIsearch in Rust.
 
 \section{RIsearch reimplementation}\label{sec:core}\label{subsec:pybindings}
 RIsearch~(v3) keeps the search algorithm of RIsearch2 unchanged: targets are concatenated and indexed in a suffix array, then each query is scanned against the index for near-complementary seeds
-The seeds are then extended in both directions with Gotoh's three-state affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a nearest-neighbour dinucleotide model that penalising bulges and internal loops.
+The seeds are then extended in both directions with Gotoh's three-state affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a nearest-neighbour dinucleotide model that penalises bulges and internal loops.
 The implementation, by contrast, was rewritten from scratch in Rust.
 Most of the code is safe Rust, which guarantees memory safety; unchecked memory access is confined to the performance-critical inner loops of seed search and extension and to the zero-copy loading of the on-disk index.
 The suffix array is now built by libsais~\citep{libsais}, a linear-time construction that can run in parallel across cores, in place of the single-threaded libdivsufsort~\citep{libdivsufsort} used by RIsearch2.
@@ -142,7 +142,7 @@ Because on-disk index is now memory-mapped and read without deserialisation, mul
 % JG: the "three practical barriers" sentence repeats the introduction; here the text must be more elaborate than a repeat.
 \section{siOFF: A reimplemented siRNA Off-Target assessment pipeline}\label{sec:pipeline}
 Alongside the new version of RIsearch, we distribute \textbf{siOFF}, a complete reimplementation of the siRNA off-target pipeline introduced by \citet{alkan2017risearch2} (\cref{fig:summary}).
-Beyond adapting the workflow from Python~2.7 to Python~3, the rewrite targets three practical barriers that limited adoption of the original tool: installation, ease of use, and integration into existing workflows.
+Beyond porting the workflow from the end-of-life Python~2.7 to Python~3, the rewrite dismantles the concrete obstacles that limited adoption of the original pipeline: an installation that required a hand-compiled RIsearch2 binary and two external executables, a rigid single-script interface with a fixed set of flags, and subprocess-and-file coupling that prevented embedding in larger analyses.
 The underlying four-stage thermodynamic model---search, annotation intersection, accessibility, and a per-siRNA Boltzmann partition function---is preserved unchanged and described in full in \ref*{supp-sec:pipeline-stages}.
 
 
@@ -157,14 +157,13 @@ siOFF retains backwards-compatible flags but adds a YAML configuration mode: eve
 A single configuration file captures an entire run, making analyses straightforward to reproduce and to share between collaborators.
 For large screens, siOFF integrates natively with Slurm: one orchestrator submits the indexing, accessibility, and off-target stages as dependent batch jobs with per-stage resource requests, and a single configuration can fan one screen out across multiple transcriptomes as independent job groups, replacing hand-written submission scripts.
 
-A single temperature option (default $37\,^\circ$C) has now been implemented. The temperature propagates to both the ViennaRNA accessibility calculation and the Boltzmann partition function, so that hybridisation and opening energies are always evaluated on a consistent thermodynamic scale---directly replicating the intent of the original RIsearch model~\citep{wenzel2012risearch} while exposing the folding condition as a first-class parameter (Supplementary Methods \ref*{supp-sec:energy-params}).
+We have now implemented a single temperature option (default $37\,^\circ$C). The temperature propagates to both the ViennaRNA accessibility calculation and the Boltzmann partition function, so that hybridisation and opening energies are always evaluated on a consistent thermodynamic scale---directly replicating the intent of the original RIsearch model~\citep{wenzel2012risearch} while exposing the folding condition as a first-class parameter (Supplementary Methods \ref*{supp-sec:energy-params}).
 
 \subsection*{Easy integration}
 Because the legacy pipeline communicated through intermediate files and subprocesses, embedding it in a larger analysis meant shelling out to a script and parsing its text output.
 siOFF instead exposes its stages as an importable Python API: the search, intersection, accessibility, and probability services can each be called directly and return native Polars DataFrames, so a user can drop any stage into an existing Python workflow and pass results to other Python-native tools in a single process, with no intermediate files and no text parsing.
 Based on RIsearch software bindings (\cref{subsec:pybindings}), siOFF thus serves both as a turnkey command-line tool and as a library component of off-target ad hoc analyses.
-
-% JG: point to precisely where in the Supplementary Methods (both references).
+ 
 \subsection*{Enhanced execution time}
 The pipeline was benchmarked on an AMD EPYC 9554 (64 cores, 32 workers) using subsets of the genome-wide siRNA efficacy library of \citet{huesken2005design} searched against the GRCh38/hg38 reference genome~\citep{schneider2017grch38} and intersected against an H1299 RNA-seq expression profile (dataset, genome indexing, expression annotation, and benchmark protocol detailed in \ref*{supp-sec:benchmark-protocol}), siOFF completes the intersection, accessibility annotation, probability computation, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 implementation across batch sizes of 500--2{,}000 siRNAs (five randomised trials per batch size; Supplementary Figure~\ref*{supp-fig:pipeline}).
 Peak memory plateaus at approximately 7\,GB regardless of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size increases (Supplementary Figure  \ref*{supp-fig:pipeline}).
@@ -191,7 +190,6 @@ This work is supported by the Novo Nordisk Foundation (NNF24OC0087112).
 \section{Conflict of interest}
 None declared.
 
-% JG: is the benchmark data the same as in RIsearch2? If so we should not redistribute it.
 \section{Code and data availability}
 %TODO: update when transfer ownership happens.
 The source code for RIsearch and siOFF is available on GitHub (\faGithub~\href{https://github.com/saiden89/risearch}{saiden89/risearch}, \faGithub~\href{https://github.com/lorenzo-22/siOFF}{lorenzo-22/siOFF}), and the packages on PyPI (\faPython~\href{https://pypi.org/project/risearch/}{risearch}, \faPython~\href{https://pypi.org/project/sioff-rna/}{sioff-rna}) and Crates.io (\faRust~\href{https://crates.io/crates/risearch}{risearch}).
