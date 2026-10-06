@@ -17,8 +17,10 @@
 \title{Supplementary Material\\[4pt]
   \large RIsearch and siOFF: An integrated, high-performance framework
   for RNA--RNA interaction and siRNA off-target prediction}
-% JG: make affiliations precisely as in the main manuscript.
-\author{Stefano Roncelli, Lorenzo Favaro, Christian Anthon, Jan Gorodkin}
+\author{Stefano Roncelli$^{1}$, Lorenzo Favaro$^{1}$, Christian Anthon$^{1}$, Jan Gorodkin$^{1,\ast}$\\[6pt]
+  \small $^{1}$Center for non-coding RNA in Technology and Health, Section for Health Data Science and AI,\\
+  \small Department of Public Health, University of Copenhagen, Thorvaldsensvej 57, 1871 Frederiksberg, Denmark\\[2pt]
+  \small $^{\ast}$Corresponding author. \href{mailto:gorodkin@rth.dk}{gorodkin@rth.dk}}
 \date{}
 
 \begin{document}
@@ -41,7 +43,7 @@ With RIsearch, we reimplement the seed-and-extend search of RIsearch2~\citep{alk
 To quantify the resulting speed-up, we benchmarked both tools on the original data from the RIsearch2 publication: 63 siRNA guide sequences searched against a chromosome-X target set of Ensembl human cDNA transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server.
 Both tools used pre-built indexes of the same target transcripts and ran with identical search parameters; we compare only search times and exclude index-construction time.
 Input files were staged on local disk to remove NFS latency, and wall-clock time was recorded with Hyperfine (one warm-up run followed by three timed runs, with the output directory cleared before each run).
-In all figures, we label the Rust implementation \texttt{RIsearch\_RS}.
+In all figures, we label the Rust implementation \texttt{RIsearch3}.
 
 The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt; mismatch counts 0--3; and output formats \texttt{p1}--\texttt{p4}.
 These seed geometries were chosen because they are the settings commonly used for siRNA and miRNA target searches~\citep{alkan2017risearch2}, and the extension lengths, mismatch counts and output formats span the range of options exposed by both tools, so that the comparison reflects typical use rather than a single favourable setting.
@@ -54,7 +56,7 @@ The two search commands, shown for seed scheme 2:7/5 with extension 20\,nt on 32
 risearch2.x -q sirnas.fa -i chrX.pksuf -s 2:7/5 \
     -e -10 -l 20 --threads 32 -z t99 -p
 
-# RIsearch (Rust; RIsearch_RS)
+# RIsearch (Rust; RIsearch3)
 risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
     --energy -10 --extension 20 --threads 32 --matrix t99 \
     --no-dedup -p 1 --multifile --compress gzip --output results_dir
@@ -98,42 +100,44 @@ risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
   \item \texttt{-{}-output results\_dir} — directory for the output
     files (RIsearch2 writes to the working directory).
 \end{itemize}
-With matched gzip-compressed output, the new RIsearch version runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $1.9\times$, up to $2.3\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
-RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (\cref{fig:risearch-compression,fig:risearch-compression-scaling}) widens the margin over RIsearch2 to a median of $2.3\times$ on seed-and-extend workloads and up to ${\sim}3\times$ on seed-only searches.
+With matched gzip-compressed output, the new RIsearch version runs about twice as fast as RIsearch2 on the canonical seed-and-extend schemes (\cref{fig:risearch-comparison}; median $2.1\times$, up to $2.4\times$), the advantage growing with extension length as the Gotoh dynamic-programming stage comes to dominate runtime (\cref{fig:risearch-extension}) and holding across thread counts (\cref{fig:risearch-scaling}).
+RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; substituting zstd (\cref{fig:risearch-compression,fig:risearch-scaling}) widens the margin over RIsearch2 further, most visibly on seed-only searches.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/risearch_comparison_main}
+\includegraphics[width=\linewidth]{figures/comparison_main}
 \caption{
   \textbf{Per-configuration search time of RIsearch versus RIsearch2.}
-  Wall-clock time at 32 threads with extension length 20\,nt and matched
-  gzip-compressed output, across seed schemes, output formats
-  (\texttt{fmt\_p1}--\texttt{p4}) and mismatch counts (\texttt{m1}--\texttt{m3}).
+  Wall-clock time at 32 threads with extension length 20\,nt (seed~21
+  mismatch runs: extension 0) and matched gzip-compressed output, across
+  seed schemes, output formats (\texttt{fmt\_p1}--\texttt{p3}) and mismatch
+  counts (\texttt{m1}--\texttt{m3}).
   Numbers above each bar pair give RIsearch's time relative to RIsearch2
   (lower is faster). On the canonical seed-and-extend schemes RIsearch is
-  roughly twice as fast (relative time $0.44$--$0.53$); the margin narrows for
-  long exact-match singleton seeds (12, 16, 21), whose sub-second runtimes are
-  dominated by fixed start-up rather than by search.
+  roughly twice as fast (relative time $0.41$--$0.67$); the margin narrows for
+  long exact-match singleton seeds (12, 16, 21: $0.58$--$0.76$), whose
+  sub-second runtimes are dominated by fixed start-up rather than by search.
 }
 \label{fig:risearch-comparison}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_tools}
+\includegraphics[width=0.72\linewidth]{figures/scalability_tools}
 \caption{
   \textbf{Thread scaling of RIsearch versus RIsearch2} (seed scheme~6,
-  extension 20\,nt). RIsearch is faster at every thread count, from
-  $1.7\times$ single-threaded (RIsearch2 188\,s vs.\ RIsearch 110\,s) to
-  $2.1\times$ at 32 threads (17.2\,s vs.\ 8.3\,s). Both tools scale
-  near-linearly up to 16 threads.
+  extension lengths 0 and 20\,nt, 1--32 threads). With matched gzip
+  output, RIsearch is faster than RIsearch2 at every thread count in both
+  extension modes, and its zstd output mode widens the gap further
+  (RIsearch2 offers only gzip). Both tools scale near-linearly up to
+  16 threads.
 }
 \label{fig:risearch-scaling}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/risearch_extension_sweep}
+\includegraphics[width=\linewidth]{figures/extension_sweep}
 \caption{
   \textbf{Effect of extension length on search time} (0--20\,nt, 32 threads,
   matched gzip output). Numbers above bars give RIsearch's time relative to
@@ -146,29 +150,20 @@ RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; subs
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/risearch_compression_gzip_vs_zstd}
+\includegraphics[width=\linewidth]{figures/compression_gzip_vs_zstd}
 \caption{
   \textbf{Output-compression modes within RIsearch}: zstd versus gzip
   (32 threads, extension 20\,nt). Numbers above bars give zstd time relative to
-  gzip. zstd trims up to ${\sim}25\%$ of wall-clock time (relative time
-  $0.75$--$0.98$) because compression, not search, is accelerated. RIsearch2
+  gzip. On seed-and-extend workloads zstd trims up to ${\sim}39\%$ of
+  wall-clock time (relative time $0.61$--$0.94$) because compression, not
+  search, is accelerated; on sub-second singleton-seed runs, where output is
+  tiny, zstd can be marginally slower (up to $1.24$). RIsearch2
   offers only gzip-style output, so the head-to-head comparisons in
   \cref{fig:risearch-comparison} use gzip for both tools; with zstd,
-  RIsearch's advantage over RIsearch2 widens further (quantified in the text
-  above).
+  RIsearch's advantage over RIsearch2 widens further
+  (\cref{fig:risearch-scaling}).
 }
 \label{fig:risearch-compression}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.72\linewidth]{figures/risearch_scalability_compression}
-\caption{
-  \textbf{Thread scaling of RIsearch output compression} (seed~6,
-  extension 20\,nt): zstd is consistently faster than gzip, e.g.\ 6.7\,s
-  vs.\ 8.3\,s at 32 threads.
-}
-\label{fig:risearch-compression-scaling}
 \end{figure}
 
 \subsection{Index construction}\label{sec:index-benchmark}
@@ -229,21 +224,23 @@ The benchmark dataset, genome indexing, expression annotation, and timing protoc
 \subsection{Accessibility pre-computation benchmark}\label{sec:accessibility-benchmark}
 
 Folding the complete GRCh38/hg38 reference ($W{=}80$, $L{=}40$, $u{=}30$, 64 workers on the AMD EPYC~9554 server) was compared between the legacy script (driven by GNU~\texttt{parallel}) and siOFF's \texttt{accessibility} subcommand (\cref{fig:accessibility}, \cref{tab:acc-bench}; implementation details in \cref{sec:accessibility-method}).
-siOFF completes the full-genome fold $\sim$34\% faster (8\,h\,46\,m vs.\ 13\,h\,12\,m) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
-The trade-off is higher peak resident memory ($\sim$3.6\,GB vs.\ $\sim$309\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
+siOFF completes the full-genome fold $\sim$26\% faster (8.85\,h vs.\ 12.0\,h) and stores the resulting profiles in $\sim$42\% less disk space (111.8\,GB vs.\ 192.6\,GB), the latter because each chromosome is written as a single two-strand compressed Parquet file rather than two uncompressed binary files.
+The trade-off is higher peak resident memory ($\sim$3.8\,GB vs.\ $\sim$324\,MB, roughly $12\times$), as the ViennaRNA Python API holds per-chromosome probability matrices in memory rather than streaming them through a subprocess; both figures are small relative to typical server memory, and this cost is incurred only once per genome and folding condition.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/accessibility_benchmark}
+\includegraphics[width=\linewidth]{figures/accessibility}
 \caption{
   \textbf{Full-genome accessibility pre-computation: legacy script versus
   siOFF's \texttt{accessibility} subcommand} (hg38, $W{=}80$, $L{=}40$, $u{=}30$,
-  64 workers). \textbf{(A)}~Wall-clock time: siOFF folds the whole genome in
-  8\,h\,46\,m versus 13\,h\,12\,m for the legacy \texttt{RNAplfold} script
-  ($-34\%$). \textbf{(B)}~Total on-disk profile size across all chromosomes:
-  111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome is stored as a
-  single compressed two-strand Parquet file rather than two uncompressed binary
-  files. Peak memory (not shown) is given in \cref{tab:acc-bench}.
+  64 workers). \textbf{Left:}~wall-clock time: siOFF folds the whole genome in
+  8.85\,h versus 12.0\,h for the legacy \texttt{RNAplfold} script
+  ($-26\%$). \textbf{Centre:}~peak resident memory: 3.78\,GB versus 324\,MB
+  for the legacy script (roughly $12\times$ higher, but small relative to
+  server memory). \textbf{Right:}~total on-disk profile size across all
+  chromosomes: 111.8\,GB versus 192.6\,GB ($-42\%$), because each chromosome
+  is stored as a single compressed two-strand Parquet file rather than two
+  uncompressed binary files. Values are also given in \cref{tab:acc-bench}.
 }
 \label{fig:accessibility}
 \end{figure}
@@ -259,8 +256,8 @@ siOFF's \texttt{accessibility} subcommand (hg38; $W{=}80$, $L{=}40$, $u{=}30$;
 \toprule
 Metric & Legacy & New \\
 \midrule
-Wall-clock time      & 13\,h\,12\,m & 8\,h\,46\,m \\
-Peak resident memory & $\sim$309\,MB & $\sim$3.6\,GB \\
+Wall-clock time      & 12.0\,h & 8.85\,h \\
+Peak resident memory & $\sim$324\,MB & $\sim$3.78\,GB \\
 On-disk profile size & 192.6\,GB    & 111.8\,GB \\
 Files per chromosome & 2            & 1 \\
 \bottomrule
