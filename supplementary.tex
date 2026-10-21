@@ -190,8 +190,8 @@ When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ 
 
 \subsection{siOFF pipeline benchmark}\label{sec:pipeline-benchmark}
 
-Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 pipeline (\cref{fig:pipeline}A).
-Peak resident-set size of the parent process plateaus at $\approx$7\,GB regardless of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size increases (\cref{fig:pipeline}B).
+Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $12.6{-}15.1\times$ faster than the legacy Python~2.7 pipeline (mean wall-clock time 52\,s vs.\ 787\,s at 500 siRNAs, 109\,s vs.\ 1{,}541\,s at 1{,}000, and 241\,s vs.\ 3{,}041\,s at 2{,}000; \cref{fig:pipeline}A).
+The total memory footprint, summed over the whole process tree, is larger for siOFF: its peak proportional set size (PSS) is 37--44\,GB, against 12--17\,GB for the legacy pipeline (\cref{fig:pipeline}B).
 The benchmark dataset, genome indexing, expression annotation, and timing protocol are described in \cref{sec:benchmark-dataset,sec:genome-indexing,sec:expression-annotation,sec:benchmark-protocol}.
 
 \begin{figure}[ht]
@@ -200,23 +200,22 @@ The benchmark dataset, genome indexing, expression annotation, and timing protoc
 \caption{
   \textbf{Wall-clock time and peak memory of siOFF versus the legacy pipeline
   across batch sizes.}
-  Each box spans the interquartile range of five independent randomised trials;
-  the central line marks the median; whiskers extend to the full range.
+  Points are the mean of five timed runs; error bars are 95\% confidence
+  intervals (Student's~$t$).
   \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
   annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
   and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
   library~\citep{huesken2005design}.
-  siOFF achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  siOFF achieves a $12.6{-}15.1\times$ speed-up relative to the legacy
   Python~2.7 implementation.
-  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
-  by \texttt{/usr/bin/time -v}.
-  siOFF plateaus at $\approx$7\,GB regardless of batch size;
-  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
-  size increases.
+  \textbf{(B)}~Peak memory (GB) of the whole process tree, measured as the
+  summed proportional set size (PSS) of all processes, sampled every 0.5\,s
+  (one run per pipeline and batch size).
+  siOFF peaks at 37--44\,GB, the legacy pipeline at 12--17\,GB.
   Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
-  with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
-  predictions were provided as input so that search time is excluded from
-  both measurements.
+  with 32 workers for both pipelines; the same pre-computed RIsearch2
+  binding-site predictions were provided as input so that search time is
+  excluded from both measurements.
 }
 \label{fig:pipeline}
 \end{figure}
@@ -298,9 +297,9 @@ Each worker performs the intersection, accessibility lookup, and partition-funct
 \subsection{Benchmark dataset}\label{sec:benchmark-dataset}
 
 The benchmark uses a subset of the genome-wide siRNA efficacy library of \citet{huesken2005design}, which comprises 2{,}431 chemically synthesised 21-mer siRNAs targeting 34 human genes, with experimentally measured knockdown efficacies obtained in the H1299 non-small-cell lung carcinoma cell line.
-A master set of 2{,}000 siRNAs was drawn by uniform random sampling (without replacement) from this library; smaller batch sizes of 1{,}000 and 500 were produced by further subsampling from this master set, with a fresh random draw for each of the five independent benchmark iterations.
+A master set of 2{,}000 siRNAs was drawn by uniform random sampling (without replacement) from this library; smaller batch sizes of 1{,}000 and 500 were produced by further subsampling from this master set, with a fresh random draw for each of the five benchmark iterations; the 2{,}000-siRNA batch is the master set itself and is identical across iterations.
 Target sequences for the off-target search were derived from the GRCh38/hg38 reference genome (UCSC assembly, December 2013).
-Expression values were taken from an H1299 RNA-seq experiment (ArrayExpress accession E-MTAB-2770), converted to per-transcript read counts and stored in BED format.
+Expression values were taken from an H1299 RNA-seq experiment (ArrayExpress accession E-MTAB-2770), quantified per transcript (TPM) and attached as a \texttt{TPM} attribute to the transcript records of the GENCODE~v47 GTF annotation (\cref{sec:expression-annotation}).
 
 \subsection{Genome indexing and RIsearch2 binding-site search}\label{sec:genome-indexing}
 
@@ -318,11 +317,11 @@ The search command used was:
 \begin{verbatim}
 risearch2.x \
     -i hg38.pksuf \
-    -q huesken_sirnas.fa \
+    -q huesken_on.fa \
     -s 2:7 \
     -e -10 \
     -p2 \
-    -l 25 \
+    -l 20 \
     -t 32
 \end{verbatim}
 
@@ -330,7 +329,7 @@ risearch2.x \
 \begin{itemize}
   \item \texttt{-i hg38.pksuf} — pre-built suffix-array index of the
     hg38 target.
-  \item \texttt{-q huesken\_on\_subset.fa} — FASTA file of siRNA query
+  \item \texttt{-q huesken\_on.fa} — FASTA file of siRNA query
     sequences (guide strand, 5$'$$\to$3$'$).
   \item \texttt{-s 2:7} — restrict seed matches to guide-strand positions
     2--7 (the canonical seed region for RISC-mediated target recognition).
@@ -339,10 +338,10 @@ risearch2.x \
     discarded.
   \item \texttt{-p2} — bindingsite output format, reporting one line per
     predicted interaction with genomic coordinates, energies, and alignment.
-  \item \texttt{-l 25} — minimum alignment length of 25\,nt, filtering
-    out truncated partial matches at sequence boundaries.
+  \item \texttt{-l 20} — maximum extension of the dynamic-programming
+    alignment beyond the seed (20\,nt), which keeps predicted target sites
+    within the 30-nt span of the accessibility profiles.
   \item \texttt{-t 32} — use 32 parallel threads for the search.
-  \item \texttt{--verbose} — write progress information to standard error.
 \end{itemize}
 
 \subsection{H1299 expression annotation}\label{sec:expression-annotation}
@@ -400,17 +399,21 @@ The high GAPDH TPM (ENST00000229239.10: 6{,}130) confirms biologically plausible
 Timing and peak-memory measurements were collected on a server equipped with an AMD EPYC~9554 processor (64 physical cores, 128 threads) and sufficient RAM to keep all input files resident.
 Both pipelines used 32 parallel workers (\texttt{-j~32} for GNU parallel in the legacy case; \texttt{-j~32} process-pool workers for the new pipeline).
 
-For each combination of pipeline version (new / legacy) and batch size (500, 1{,}000, 2{,}000 siRNAs), the following procedure was applied: (i)~one warmup run was executed and discarded to populate OS page-cache entries and JIT any Python bytecode; (ii)~five timed runs were executed, each with a fresh output directory to avoid I/O caching effects.
-Wall-clock time and peak resident-set size (RSS) of the parent process were recorded with \texttt{/usr/bin/time -v} (GNU~time).
-Because both pipelines spawn independent child processes (GNU~parallel in the legacy case; a spawn-based process pool in siOFF), the RSS reported reflects only the parent; aggregate memory across all 32 workers will exceed this figure.
+For each pipeline, one untimed warmup run on the 2{,}000-siRNA master set was executed and discarded to populate OS page-cache entries; then, for each batch size (500, 1{,}000, 2{,}000 siRNAs), five timed runs were executed, each with a fresh output directory.
+Wall-clock time was recorded with \texttt{/usr/bin/time -v} (GNU~time).
+Because both pipelines spawn independent child processes (GNU~parallel in the legacy case; a spawn-based process pool in siOFF), GNU~time's maximum resident-set size reflects only the single largest process ($\sim$8.8\,GB for legacy, $\sim$4.7\,GB for siOFF) rather than the run as a whole.
+Peak memory was therefore measured in a separate, untimed run per pipeline and batch size, sampling the whole process tree every 0.5\,s and recording the peak of the summed proportional set size (PSS), in which a page shared by $N$ processes (e.g.\ a memory-mapped accessibility file) is charged $1/N$ to each.
 
 For batch sizes of 1{,}000 and 500, each of the five timed runs used an independently drawn random subset of the master 2{,}000-siRNA set, ensuring that variance estimates reflect genuine sampling variability rather than run-to-run measurement noise alone.
-Pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
+The same pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
+The legacy pipeline reads these gzip-compressed files directly; for siOFF they were converted once to Parquet, the format RIsearch~(v3) emits natively, and this conversion is not timed.
+Likewise, siOFF's memory-mapped accessibility cache was built once from its Parquet profiles before timing, analogous to the legacy pipeline's pre-computed binary accessibility files.
+Without accessibility, the off-targeting probabilities of the two pipelines agree for all 2{,}000 siRNAs of the master set (maximum absolute difference $1.4\times10^{-4}$).
 The results of this benchmark are presented in \cref{sec:pipeline-benchmark}.
 
 \subsection{Accessibility pre-computation}\label{sec:accessibility-method}
 
-The legacy pipeline computed per-nucleotide RNA opening energies with a Python~2.7 script that wrapped the \texttt{RNAplfold} executable (ViennaRNA~2.6.3) as a subprocess, emitting two flat \texttt{uint8} binary files per chromosome (one per strand).
+The legacy pipeline computed per-nucleotide RNA opening energies with a Python~2.7 script that wrapped the \texttt{RNAplfold} executable (ViennaRNA~2.5.1) as a subprocess, emitting two flat \texttt{uint8} binary files per chromosome (one per strand).
 siOFF's \texttt{accessibility} subcommand reproduces the same folding parameters ($W{=}80$, $L{=}40$, $u{=}30$) through the ViennaRNA~2.7.2 Python API directly, without spawning subprocesses: for each chromosome the call \texttt{RNA.fold\_compound(...).probs\_window(...)} returns per-position unpaired-probability vectors at the specified temperature (default $37\,^\circ$C, set via \texttt{-{}-temperature}), from which opening energies $O_i = -RT\ln p_i$ are computed in-process and written as a single per-chromosome Apache Parquet file with columnar compression and zero-copy Arrow reads.
 The corresponding full-genome benchmark is reported in \cref{sec:accessibility-benchmark}.
 
