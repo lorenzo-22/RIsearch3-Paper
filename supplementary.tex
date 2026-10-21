@@ -190,29 +190,29 @@ When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ 
 
 \subsection{siOFF pipeline benchmark}\label{sec:pipeline-benchmark}
 
-Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $7.7{-}10.7\times$ faster than the legacy Python~2.7 pipeline (\cref{fig:pipeline}A).
-Peak resident-set size of the parent process plateaus at $\approx$7\,GB regardless of batch size, whereas the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch size increases (\cref{fig:pipeline}B).
+Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $12.6{-}15.1\times$ faster than the legacy Python~2.7 pipeline (\cref{fig:pipeline}A).
+Peak memory, measured as the proportional set size (PSS) summed across all processes, is higher for siOFF, rising from $\sim$37\,GB at 500 siRNAs to a $\sim$44\,GB plateau, whereas the legacy pipeline grows from $\sim$12\,GB to $\sim$17\,GB as batch size increases (\cref{fig:pipeline}B).
 The benchmark dataset, genome indexing, expression annotation, and timing protocol are described in \cref{sec:benchmark-dataset,sec:genome-indexing,sec:expression-annotation,sec:benchmark-protocol}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\includegraphics[width=\linewidth]{figures/offtarget_pipeline}
 \caption{
   \textbf{Wall-clock time and peak memory of siOFF versus the legacy pipeline
   across batch sizes.}
-  Each box spans the interquartile range of five independent randomised trials;
-  the central line marks the median; whiskers extend to the full range.
+  Lines show per-batch-size results over five independent randomised trials
+  per batch size (\cref{sec:benchmark-protocol}).
   \textbf{(A)}~Wall-clock time (seconds) for the intersection, accessibility
   annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
   and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
   library~\citep{huesken2005design}.
-  siOFF achieves a $7.7{-}10.7\times$ speed-up relative to the legacy
+  siOFF achieves a $12.6{-}15.1\times$ speed-up relative to the legacy
   Python~2.7 implementation.
-  \textbf{(B)}~Peak resident-set size (GB) of the parent process as reported
-  by \texttt{/usr/bin/time -v}.
-  siOFF plateaus at $\approx$7\,GB regardless of batch size;
-  the legacy pipeline grows from $\sim$8.5\,GB to $\sim$10\,GB as batch
-  size increases.
+  \textbf{(B)}~Peak memory (GB), measured as the proportional set size (PSS)
+  summed across all processes (parent and workers).
+  siOFF rises from $\sim$37\,GB to a $\sim$44\,GB plateau, whereas the
+  legacy pipeline grows from $\sim$12\,GB to $\sim$17\,GB as batch size
+  increases.
   Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
   with 32 workers for both pipelines; pre-computed RIsearch2 binding-site
   predictions were provided as input so that search time is excluded from
@@ -401,8 +401,8 @@ Timing and peak-memory measurements were collected on a server equipped with an 
 Both pipelines used 32 parallel workers (\texttt{-j~32} for GNU parallel in the legacy case; \texttt{-j~32} process-pool workers for the new pipeline).
 
 For each combination of pipeline version (new / legacy) and batch size (500, 1{,}000, 2{,}000 siRNAs), the following procedure was applied: (i)~one warmup run was executed and discarded to populate OS page-cache entries and JIT any Python bytecode; (ii)~five timed runs were executed, each with a fresh output directory to avoid I/O caching effects.
-Wall-clock time and peak resident-set size (RSS) of the parent process were recorded with \texttt{/usr/bin/time -v} (GNU~time).
-Because both pipelines spawn independent child processes (GNU~parallel in the legacy case; a spawn-based process pool in siOFF), the RSS reported reflects only the parent; aggregate memory across all 32 workers will exceed this figure.
+Wall-clock time was recorded with \texttt{/usr/bin/time -v} (GNU~time).
+Because both pipelines spawn independent child processes (GNU~parallel in the legacy case; a spawn-based process pool in siOFF), peak memory was recorded as the proportional set size (PSS) summed across all processes (parent and workers), so that shared pages are counted once and the aggregate footprint of the full worker pool is reflected.
 
 For batch sizes of 1{,}000 and 500, each of the five timed runs used an independently drawn random subset of the master 2{,}000-siRNA set, ensuring that variance estimates reflect genuine sampling variability rather than run-to-run measurement noise alone.
 Pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
