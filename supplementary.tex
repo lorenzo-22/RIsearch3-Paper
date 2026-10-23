@@ -190,13 +190,13 @@ When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ 
 
 \subsection{siOFF pipeline benchmark}\label{sec:pipeline-benchmark}
 
-Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $12.6{-}15.1\times$ faster than the legacy Python~2.7 pipeline (mean wall-clock time 52\,s vs.\ 787\,s at 500 siRNAs, 109\,s vs.\ 1{,}541\,s at 1{,}000, and 241\,s vs.\ 3{,}041\,s at 2{,}000; \cref{fig:pipeline}A).
-The total memory footprint, summed over the whole process tree, is larger for siOFF: its peak proportional set size (PSS) is 37--44\,GB, against 12--17\,GB for the legacy pipeline (\cref{fig:pipeline}B).
+Across batch sizes of 500, 1{,}000, and 2{,}000 siRNAs from the genome-wide efficacy library of \citet{huesken2005design}, siOFF completes the intersection, accessibility-annotation, partition-function, and output stages $18.1{-}21.8\times$ faster than the legacy Python~2.7 pipeline (mean wall-clock time 43\,s vs.\ 782\,s at 500 siRNAs, 75\,s vs.\ 1{,}553\,s at 1{,}000, and 141\,s vs.\ 3{,}062\,s at 2{,}000; \cref{fig:pipeline}A).
+The total memory footprint, summed over the whole process tree, is larger for siOFF: its mean peak proportional set size (PSS) is 40--45\,GB, against 12--16\,GB for the legacy pipeline (\cref{fig:pipeline}B).
 The benchmark dataset, genome indexing, expression annotation, and timing protocol are described in \cref{sec:benchmark-dataset,sec:genome-indexing,sec:expression-annotation,sec:benchmark-protocol}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{figures/pipeline_comparison}
+\includegraphics[width=\linewidth]{figures/offtarget_pipeline}
 \caption{
   \textbf{Wall-clock time and peak memory of siOFF versus the legacy pipeline
   across batch sizes.}
@@ -206,12 +206,12 @@ The benchmark dataset, genome indexing, expression annotation, and timing protoc
   annotation, Boltzmann partition-function, and output stages on 500, 1{,}000,
   and 2{,}000 siRNAs from the Hüsken et~al.\ genome-wide efficacy
   library~\citep{huesken2005design}.
-  siOFF achieves a $12.6{-}15.1\times$ speed-up relative to the legacy
+  siOFF achieves an $18.1{-}21.8\times$ speed-up relative to the legacy
   Python~2.7 implementation.
   \textbf{(B)}~Peak memory (GB) of the whole process tree, measured as the
   summed proportional set size (PSS) of all processes, sampled every 0.5\,s
-  (one run per pipeline and batch size).
-  siOFF peaks at 37--44\,GB, the legacy pipeline at 12--17\,GB.
+  in each timed run.
+  siOFF peaks at 40--45\,GB, the legacy pipeline at 12--16\,GB.
   Benchmarks were run on an AMD EPYC 9554 server (64 physical cores)
   with 32 workers for both pipelines; the same pre-computed RIsearch2
   binding-site predictions were provided as input so that search time is
@@ -402,13 +402,13 @@ Both pipelines used 32 parallel workers (\texttt{-j~32} for GNU parallel in the 
 For each pipeline, one untimed warmup run on the 2{,}000-siRNA master set was executed and discarded to populate OS page-cache entries; then, for each batch size (500, 1{,}000, 2{,}000 siRNAs), five timed runs were executed, each with a fresh output directory.
 Wall-clock time was recorded with \texttt{/usr/bin/time -v} (GNU~time).
 Because both pipelines spawn independent child processes (GNU~parallel in the legacy case; a spawn-based process pool in siOFF), GNU~time's maximum resident-set size reflects only the single largest process ($\sim$8.8\,GB for legacy, $\sim$4.7\,GB for siOFF) rather than the run as a whole.
-Peak memory was therefore measured in a separate, untimed run per pipeline and batch size, sampling the whole process tree every 0.5\,s and recording the peak of the summed proportional set size (PSS), in which a page shared by $N$ processes (e.g.\ a memory-mapped accessibility file) is charged $1/N$ to each.
+Peak memory was therefore measured in every timed run by sampling the whole process tree every 0.5\,s and recording the peak of the summed proportional set size (PSS), in which a page shared by $N$ processes (e.g.\ a memory-mapped accessibility file) is charged $1/N$ to each.
 
 For batch sizes of 1{,}000 and 500, each of the five timed runs used an independently drawn random subset of the master 2{,}000-siRNA set, ensuring that variance estimates reflect genuine sampling variability rather than run-to-run measurement noise alone.
 The same pre-computed RIsearch2 binding-site prediction files were provided as input to both pipelines, so that search time is excluded from all measurements.
 The legacy pipeline reads these gzip-compressed files directly; for siOFF they were converted once to Parquet, the format RIsearch~(v3) emits natively, and this conversion is not timed.
-Likewise, siOFF's memory-mapped accessibility cache was built once from its Parquet profiles before timing, analogous to the legacy pipeline's pre-computed binary accessibility files.
-Without accessibility, the off-targeting probabilities of the two pipelines agree for all 2{,}000 siRNAs of the master set (maximum absolute difference $1.4\times10^{-4}$).
+Likewise, siOFF memory-maps the per-chromosome accessibility arrays written by its \texttt{accessibility} subcommand (\cref{sec:accessibility-method}), analogous to the legacy pipeline's pre-computed binary accessibility files.
+Without accessibility, the off-targeting probabilities of the two pipelines agree for all 2{,}000 siRNAs of the master set (maximum absolute difference $3.9\times10^{-4}$).
 The results of this benchmark are presented in \cref{sec:pipeline-benchmark}.
 
 \subsection{Accessibility pre-computation}\label{sec:accessibility-method}
