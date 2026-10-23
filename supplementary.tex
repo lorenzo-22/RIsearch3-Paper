@@ -170,7 +170,7 @@ RIsearch additionally offers zstd-compressed output, which RIsearch2 lacks; subs
 
 RIsearch3 builds its suffix-array index in parallel across cores with libsais~\citep{libsais}, whereas RIsearch2's libdivsufsort construction is single-threaded.
 Building the GRCh38/hg38 index was benchmarked against RIsearch2 with Hyperfine (\cref{fig:indexing}).
-When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ faster single-threaded ($0.74\times$ the RIsearch2 time) and ${\sim}1.9\times$ faster at 16 threads ($0.54\times$); when the index is instead written to tmpfs, the parallel suffix-array construction is up to ${\sim}5.4\times$ faster ($0.19\times$ at 16 threads), showing that disk I/O, not computation, dominates the write-to-disk case.
+When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ faster single-threaded ($0.74\times$ the RIsearch2 time) and ${\sim}1.9\times$ faster at 16 threads ($0.54\times$); when the index is instead written to \texttt{/dev/null}, the parallel suffix-array construction is up to ${\sim}8.0\times$ faster ($0.13\times$ at 16 threads), showing that disk I/O, not computation, dominates the write-to-disk case.
 
 \begin{figure}[ht]
 \centering
@@ -178,11 +178,11 @@ When the index is written to local disk, RIsearch3 is already ${\sim}1.4\times$ 
 \caption{
   \textbf{Suffix-array index construction time for the masked GRCh38/hg38
   genome (3.1\,GB):} RIsearch2 (C, single-threaded) versus RIsearch3 at 1, 8
-  and 16 threads, with the index written either to local disk or to tmpfs.
-  Error bars show the range across Hyperfine runs. Writing to local disk,
+  and 16 threads, with the index written either to local disk or to \texttt{/dev/null}.
+  Error bars show the standard deviation across Hyperfine runs. Writing to local disk,
   RIsearch3 builds the index ${\sim}1.9\times$ faster at 16 threads
-  ($0.54\times$ the RIsearch2 time); written to tmpfs, its parallel
-  construction is up to ${\sim}5.4\times$ faster ($0.19\times$), indicating
+  ($0.54\times$ the RIsearch2 time); written to \texttt{/dev/null}, its parallel
+  construction is up to ${\sim}8.0\times$ faster ($0.13\times$), indicating
   that disk I/O dominates the write-to-disk timing.
 }
 \label{fig:indexing}
