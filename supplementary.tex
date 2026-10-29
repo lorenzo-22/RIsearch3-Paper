@@ -17,6 +17,7 @@
 \title{Supplementary Material\\[4pt]
   \large RIsearch and siOFF: An integrated, high-performance framework
   for RNA--RNA interaction and siRNA off-target prediction}
+% JG: make affiliations precisely as in the main manuscript.
 \author{Stefano Roncelli$^{1}$, Lorenzo Favaro$^{1}$, Christian Anthon$^{1}$, Jan Gorodkin$^{1,\ast}$\\[6pt]
   \small $^{1}$Center for non-coding RNA in Technology and Health, Section for Health Data Science and AI,\\
   \small Department of Public Health, University of Copenhagen, Thorvaldsensvej 57, 1871 Frederiksberg, Denmark\\[2pt]
@@ -34,17 +35,25 @@
 \setcounter{section}{0}
 \renewcommand{\thesection}{S\arabic{section}}
 
+% JG: split "Supplementary Methods" into "Methods" and "Results"; the first section below is results, not methods.
+% JG: within the Supplementary Material, "Supplementary" in the heading is redundant.
 \section{Results}\label{sec:results}
 
 % JG: add a section explaining how RIsearch2 is executed and with which options, and the same for RIsearch (v3), so the reader sees what changed at both the installation and the execution step; say which options are the same and which are new.
 
 \subsection{RIsearch core search benchmark}\label{sec:risearch-benchmark}
+% JG: active voice: "With RIsearch we reimplement ... we benchmark both tools on the original data from the RIsearch2 publication: 63 siRNA sequences are matched against ..."
+% JG: "pre-built indexes of the same target transcripts"; "only search times are compared and execution time spent on index construction excluded".
+% JG: "Input files were placed on disk on the given execution server to be unaffected by possible NFS latency."
+% JG: what difference does it make whether the output directory is empty or not?
+% JG, add: "Note that although siRNAs are used, this part of the benchmark concerns only RIsearch and not the siOFF pipeline, which is executed on top of the RIsearch output."
 With RIsearch, we reimplement the seed-and-extend search of RIsearch2~\citep{alkan2017risearch2} in Rust.
 To quantify the resulting speed-up, we benchmarked both tools on the original data from the RIsearch2 publication: 63 siRNA guide sequences searched against a chromosome-X target set of Ensembl human cDNA transcripts filtered to $\geq 80$\,nt, on an AMD EPYC~9554 server.
 Both tools used pre-built indexes of the same target transcripts and ran with identical search parameters; we compare only search times and exclude index-construction time.
 Input files were staged on local disk to remove NFS latency, and wall-clock time was recorded with Hyperfine (one warm-up run followed by three timed runs, with the output directory cleared before each run).
 In all figures, we label the Rust implementation \texttt{RIsearch3}.
 
+% JG: justify every single chosen parameter setting in this paragraph.
 The parameter grid comprised seed schemes 2:7, 2:7/5, 1:12/6, 1:12/7, 1:12/8 and the singletons 4, 5, 6, 12 and 16; extension lengths 0, 5, 10, 15 and 20\,nt; mismatch counts 0--3; and output formats \texttt{p1}--\texttt{p4}.
 These seed geometries were chosen because they are the settings commonly used for siRNA and miRNA target searches~\citep{alkan2017risearch2}, and the extension lengths, mismatch counts and output formats span the range of options exposed by both tools, so that the comparison reflects typical use rather than a single favourable setting.
 Thread scaling was measured for seed scheme~6 at 1, 2, 4, 8, 16 and 32 threads.
@@ -62,6 +71,7 @@ risearch search --query sirnas.fa --target chrX.idx --seed 2:7/5 \
     --no-dedup -p 1 --multifile --compress gzip --output results_dir
 \end{verbatim}
 
+% JG: the reader has no chance to understand these commands unless each option in each version is explained; please add.
 \noindent Option meanings, with the RIsearch2 flag given first and the RIsearch equivalent second:
 \begin{itemize}
   \item \texttt{-q sirnas.fa} / \texttt{-{}-query sirnas.fa} — FASTA file
