@@ -52,8 +52,8 @@ Given the sheer scale of the search space (genome/transcriptome), there is high 
 Both tools now have substantially improved usability, interoperability, and installation procedures.
 RIsearch~(v3) is a Rust reimplementation of the RIsearch2 search algorithm, verified against the reference; it reworks the original command-line interface, adds Python bindings, and improves performance.
 siOFF modernises the previous siRNA off-target pipeline through a redesigned CLI, improved distribution and faster execution.\\
-\textbf{Availability and implementation:} RIsearch and siOFF are released under the Business Source License 1.1 at \href{https://github.com/saiden89/risearch}{github.com/saiden89/risearch} and \href{https://github.com/lorenzo-22/RIsearch_pipeline}{github.com/lorenzo-22/RIsearch\_pipeline}.
-Both software packages are available on PyPI as \texttt{risearch} and \texttt{sioff}. The Rust binary is indexed in .\\
+\textbf{Availability and implementation:} RIsearch and siOFF are released under the Business Source License 1.1 at \href{https://github.com/RTH-tools/risearch}{github.com/RTH-tools/risearch} and \href{https://github.com/RTH-tools/siOFF}{github.com/RTH-tools/siOFF}.
+Both software packages are available on PyPI as \texttt{risearch} and \texttt{sioff}; the Rust crate is also indexed on Crates.io as \texttt{risearch}.\\
 \textbf{Contact:} Jan Gorodkin, \href{mailto:gorodkin@rth.dk}{gorodkin@rth.dk}}
 
 % JG: "RNA-RNA interactions", "siRNA off-target assessment"; replace "bioinformatics tooling" with "seamless interoperability".
@@ -141,7 +141,7 @@ We regenerated the energy parameter tables from ViennaRNA duplex energies, so th
 
 % JG: drop "only"; give examples of the standard registries.
 RIsearch2 is distributed as C source code that each user must compile by hand, which requires a C toolchain and leaves build settings and dependency versions to each machine.
-The new version needs no manual build: it installs with a single command from the Python and Rust package registries, \href{https://pypi.org/project/risearch/}{PyPI} and \href{https://crates.io/crates/risearch}{Crates.io}, or as a prebuilt binary from each \href{https://github.com/saiden89/risearch/releases}{GitHub release}.
+The new version needs no manual build: it installs with a single command from the Python and Rust package registries, \href{https://pypi.org/project/risearch/}{PyPI} and \href{https://crates.io/crates/risearch}{Crates.io}, or as a prebuilt binary from each \href{https://github.com/RTH-tools/risearch/releases}{GitHub release}.
 
 % JG: heading -> "Improved usability".
 \subsection*{Improved usability}
@@ -264,11 +264,10 @@ None declared.
 % JG: is the benchmark data the same as in RIsearch2? If so we should not redistribute it.
 % JG: "The source code for RIsearch and siOFF is available at multiple places: http://rth.dk/resources/risearch/; [list the other URLs]."
 \section{Code and data availability}
-%TODO: update when transfer ownership happens.
-The source code for RIsearch and siOFF is available on GitHub (\faGithub~\href{https://github.com/saiden89/risearch}{saiden89/risearch}, \faGithub~\href{https://github.com/lorenzo-22/siOFF}{lorenzo-22/siOFF}), and the packages on PyPI (\faPython~\href{https://pypi.org/project/risearch/}{risearch}, \faPython~\href{https://pypi.org/project/sioff-rna/}{sioff-rna}) and Crates.io (\faRust~\href{https://crates.io/crates/risearch}{risearch}).
+The source code for RIsearch and siOFF is available on GitHub (\faGithub~\href{https://github.com/RTH-tools/risearch}{RTH-tools/risearch}, \faGithub~\href{https://github.com/RTH-tools/siOFF}{RTH-tools/siOFF}), and the packages on PyPI (\faPython~\href{https://pypi.org/project/risearch/}{risearch}, \faPython~\href{https://pypi.org/project/sioff/}{sioff}) and Crates.io (\faRust~\href{https://crates.io/crates/risearch}{risearch}).
 All distribution channels are summarised at \faGlobe~\href{http://rth.dk/resources/risearch/}{rth.dk/resources/risearch}.
-% RIsearch and siOFF source code is available at [GitHub URL]. Benchmark datasets and scripts
-% used to reproduce the results in this paper are deposited at [Zenodo DOI].
+%TODO: replace placeholder DOI once the Zenodo deposit for the benchmarking code is created.
+The benchmarking code and scripts used to produce the results in this paper are deposited on Zenodo (\href{https://doi.org/10.5281/zenodo.XXXXXXX}{doi:10.5281/zenodo.XXXXXXX}).
 
 \bibliographystyle{oup-abbrvnat}
 \bibliography{reference}
