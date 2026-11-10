@@ -8,7 +8,15 @@
 \usepackage{xcolor}
 \usepackage[colorlinks=true,allcolors=blue]{hyperref}
 
-\input{preamble}
+\usepackage{microtype}
+\usepackage{cleveref}
+
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
 
 \renewcommand{\thepage}{S\arabic{page}}
 \renewcommand{\figurename}{Figure}
