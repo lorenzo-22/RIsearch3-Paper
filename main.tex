@@ -85,7 +85,7 @@ When studying and using endogenous and synthetic small interfering RNAs (siRNAs)
 % JG: drop "distributed alongside RIsearch2".
 RIsearch2~\citep{alkan2017risearch2} is a tool designed for large-scale screens of near-complementary RNA--RNA interactions.
 Because it ignores intramolecular interactions, it is particularly suitable for probing the off-target landscape of small RNAs, like siRNAs.
-RIsearch combines a suffix-array index of the target with a seed-and-extend dynamic-programming step that uses a nearest-neighbour simplified energy model~\citep{wenzel2012risearch}.
+RIsearch combines a suffix-array index of the target with a seed-and-extend dynamic-programming step that uses a simplified nearest-neighbour energy model~\citep{wenzel2012risearch}.
 The companion siRNA off-target pipeline turns these predictions into per-transcript binding probabilities and a transcriptome-wide off-targeting potential through a partition-function model that integrates transcript abundance and binding-site accessibility.
 
 % JG: replace this paragraph and merge it into the next: "With the development of software ecosystems new opportunities have emerged that can advance over a C source tarball with a custom Makefile and Python~2.7 previously used. Here, we introduce new versions of RIsearch2 and the siRNA pipeline, redesigned for improved usability, interoperability with the latest frameworks, and leading to easier installation."
@@ -141,7 +141,7 @@ RIsearch~(v3) keeps RIsearch2's search algorithm unchanged: targets are concaten
 The seeds are then extended in both directions with Gotoh's three-state affine-gap recurrence~\citep{gotoh1982improved}, scoring stacked pairs from a nearest-neighbour dinucleotide model that penalises bulges and internal loops.
 By contrast, the implementation was rewritten from scratch in Rust.
 Most of the code is safe Rust, which guarantees memory safety; unchecked memory access is confined to the performance-critical inner loops of seed search and extension and to the zero-copy loading of the on-disk index.
-The suffix array is now built with libsais~\citep{libsais}, a linear-time construction that can run in parallel across cores, replacing the single-threaded libdivsufsort~\citep{libdivsufsort} used by RIsearch2.
+The suffix array is now built with libsais~\citep{libsais}, a linear-time construction that can run in parallel across cores, replacing the index-building by the single-threaded  libdivsufsort~\citep{libdivsufsort} used by RIsearch2.
 We regenerated the energy parameter tables from ViennaRNA duplex energies, so the calculated hybridisation energies differ from those of RIsearch2.
 
 % JG: heading -> "Seamless installation".
