@@ -512,8 +512,10 @@ In cases where the alignments were not full length, the alignments and energies 
 
 The RNA/DNA parameters in both the previous versions of RIsearch and in the 2.1.9h version of ViennaRNA were constructed from the Sugimoto 95 paper~\citep{sugimoto1995rnadna}, which only contains the SEPs for canonical basepair stacks like rACdTG.
 Missing values were obtained as the average of corresponding RNA/RNA and DNA/DNA SEP.
-However the RNA/DNA parameters have been improved upon in two papers~\citep{sugimoto2000thermodynamics,watkins2011thermodynamic}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g.\ rGCGdCAC and for symmetrical mismatches, e.g.\ rAGdTG and rGGdCG.
+However, the RNA/DNA parameters have been improved upon in two papers~\citep{sugimoto2000thermodynamics,watkins2011thermodynamic}, which respectively adds temperature dependent SEPs for mismatches with neighbouring CG pairs, e.g.\ rGCGdCAC and for symmetrical mismatches, e.g.\ rAGdTG and rGGdCG.
 These values have been used in place of the values obtained by fitting in the final RNA/DNA SEP matrix.
+
+ The parameters were derived at 0, 25, 37, 42, and 50 deg Celcius and at other temperatures the parameters are obtained by linear interpolation.
 
 \bibliographystyle{oup-abbrvnat}
 \bibliography{reference}
