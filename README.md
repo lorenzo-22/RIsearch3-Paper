@@ -1,6 +1,6 @@
 # RIsearch and siOFF — manuscript
 
-LaTeX source for the *Bioinformatics* Application Note:
+LaTeX source for the Application Note manuscript:
 
 > **RIsearch and siOFF: An integrated, high-performance framework for RNA–RNA interaction and siRNA off-target assessment**
 > Stefano Roncelli, Lorenzo Favaro, Christian Anthon, Jan Gorodkin
