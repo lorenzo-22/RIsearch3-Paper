@@ -108,7 +108,7 @@ The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-tar
   \textbf{Installation and execution of RIsearch and the siOFF pipeline.}
   \textbf{(Top, blue)} \textbf{RIsearch} is a Rust reimplementation of the RIsearch2 search algorithm, installable via \texttt{cargo install risearch} (Crates.io) or as a Python wheel via \texttt{pip install risearch} (PyPI).
   The core builds a suffix-array index of target sequences and runs a seed-and-extend dynamic-programming search using the simplified RIsearch energy model, producing interaction hits as a TSV file.
-  \textbf{(Bottom, green)} \textbf{siOFF} (siRNA Off-Target pipeline) is a timely Python~3 rewrite installable with a single \texttt{pip install sioff-rna}, which bundles the RIsearch dependencies, the ViennaRNA~2.7.2 Python API, and an in-memory nested containment list (NCLS) interval index with no external binaries required.
+  \textbf{(Bottom, green)} \textbf{siOFF} (siRNA Off-Target pipeline) is a timely Python~3 rewrite installable with a single \texttt{pip install sioff}, which bundles the RIsearch dependencies, the ViennaRNA~2.7.2 Python API, and an in-memory nested containment list (NCLS) interval index with no external binaries required.
   siOFF orchestrates four stages: (\textit{i})~RIsearch index and search invoked natively via PyO3 bindings; (\textit{ii})~intersection of predicted binding sites with a transcriptome annotation using an NCLS index; (\textit{iii})~per-site RNA accessibility computed through the ViennaRNA Python API; and (\textit{iv})~a per-siRNA Boltzmann partition function yielding off-target probabilities, written to a TSV output file.
   The dashed arrow indicates that siOFF calls RIsearch within the same process via the Python bindings, with no subprocess or intermediate files.
 }
@@ -216,7 +216,7 @@ The underlying four-stage thermodynamic model---search, annotation intersection,
 % JG: "The original pipeline requires a Python~2.7 interpreter, a separately compiled RIsearch2 C binary, and installation of the external software RNAplfold (ViennaRNA package~\citep{lorenz2011vienna}) and bedtools. siOFF does not have these dependencies; a single command ... brings in ..."
 \subsection*{One-command installation}
 The original pipeline requires a Python~2.7 interpreter, a separately compiled RIsearch2 C binary, and installation of external software \texttt{RNAplfold} (ViennaRNA) and \texttt{bedtools}~\citep{quinlan2010bedtools}.
-siOFF removes the need for external dependency installation: a single \texttt{pip install sioff-rna} brings in the RIsearch software as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory nested containment list (NCLS)~\citep{ncls}---an interval index that answers genomic overlap queries directly in Python---in place of \texttt{bedtools}.
+siOFF removes the need for external dependency installation: a single \texttt{pip install sioff} brings in the RIsearch software as a pre-compiled wheel, the ViennaRNA~2.7.2 Python API~\citep{lorenz2011vienna} in place of the \texttt{RNAplfold} executable, and an in-memory nested containment list (NCLS)~\citep{ncls}---an interval index that answers genomic overlap queries directly in Python---in place of \texttt{bedtools}.
 All transitive dependencies are resolved and pinned through a universal \texttt{uv} lockfile, so installations are reproducible and free of version conflicts across machines.
 
 \subsection*{Easier to use}
@@ -277,6 +277,7 @@ None declared.
 % JG: "The source code for RIsearch and siOFF is available at multiple places: http://rth.dk/resources/risearch/; [list the other URLs]."
 \section{Code and data availability}
 The source code for RIsearch and siOFF is available on GitHub (\faGithub~\href{https://github.com/RTH-tools/risearch}{RTH-tools/risearch}, \faGithub~\href{https://github.com/RTH-tools/siOFF}{RTH-tools/siOFF}), and the packages on PyPI (\faPython~\href{https://pypi.org/project/risearch/}{risearch}, \faPython~\href{https://pypi.org/project/sioff/}{sioff}) and Crates.io (\faRust~\href{https://crates.io/crates/risearch}{risearch}).
+This paper describes siOFF release v0.3.0 (\faGithub~\href{https://github.com/RTH-tools/siOFF/releases/tag/v0.3.0}{RTH-tools/siOFF v0.3.0}).
 All distribution channels are summarised at \faGlobe~\href{http://rth.dk/resources/risearch/}{rth.dk/resources/risearch}.
 %TODO: replace placeholder DOI once the Zenodo deposit for the benchmarking code is created.
 The benchmarking code and scripts used to produce the results in this paper are deposited on Zenodo (\href{https://doi.org/10.5281/zenodo.XXXXXXX}{doi:10.5281/zenodo.XXXXXXX}).
