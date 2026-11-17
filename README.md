@@ -11,8 +11,8 @@ The software it describes lives elsewhere: the Rust search core (`risearch`) and
 
 ## Build
 
-Both PDFs are built with `pdflatex` and `bibtex` from TeX Live, the same engine
-Overleaf uses. The built `main.pdf` and `supplementary.pdf` are committed alongside
+Both PDFs are built with `pdflatex` and `bibtex` from TeX Live (pdfTeX, the engine
+that produced the PDFs committed from Overleaf). The built `main.pdf` and `supplementary.pdf` are committed alongside
 the sources.
 
 ### One-time setup: fontawesome5
