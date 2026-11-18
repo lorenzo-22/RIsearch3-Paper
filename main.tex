@@ -59,7 +59,7 @@
 \abstract{
 \textbf{Motivation:} A substantial part of RNA function comes from its interactions with other RNAs.
  %Given the sheer scale of the search space (genome/transcriptome), there is high demand for fast RNA interaction search software that should also be user-friendly and easy to integrate with other tools.\\
-Given the sheer scale of the genome and transcriptome search spaces, there is high demand for RNA interaction search software that is both user-friendly and able to conduct fast searches. The existing RIsearch package, already conducts fast searches, but it's limited by the software practices available at the time.
+Given the sheer scale of the genome and transcriptome search spaces, there is high demand for RNA interaction search software that is both user-friendly and able to conduct fast searches. Although the existing RIsearch package is already computationally competitive, it is however limited by the software practices available at the time.
 \textbf{Results:}
 %JG: Taking outset the possibilities for organizing and structure software,%
 Here, we introduce new versions of RIsearch and its downstream siRNA off-target assessment pipeline.
@@ -93,8 +93,7 @@ Even when studying and using endogenous or synthetic small interfering RNAs (siR
 % JG: drop "distributed alongside RIsearch2".
 To computationally search for such off-targets, RIsearch2~\citep{alkan2017risearch2} was designed for large-scale screens of near-complementary RNA--RNA interactions.
 %Because it ignores intramolecular interactions, it is particularly suitable for probing the off-target landscape of small RNAs, such as siRNAs.
-Because it ignores intramolecular interactions, the computational complexity is reduced, therefore improving suitability for probing the off-target landscape of small RNAs, such as siRNAs.
-%It
+Because intramolecular interactions are ignored, the computational complexity and the search space are reduced, therefore making fast \textit{in silico} screening for off-target assessment of small RNAs such as siRNAs feasible.
 RIsearch2 combines a suffix-array index of the target with a seed-and-extend dynamic-programming step driven \citep{alkan2017risearch2} by a simplified nearest-neighbour energy model~\citep{wenzel2012risearch}.
 The companion siRNA off-target pipeline turns these predictions into per-transcript binding probabilities and a transcriptome-wide off-targeting potential through a partition-function model that integrates transcript abundance and binding-site accessibility.
 
@@ -102,18 +101,10 @@ The companion siRNA off-target pipeline turns these predictions into per-transcr
 % JG: "We introduce RIsearch~(v3), a Rust reimplementation ..." and "The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline that consumes the RIsearch~(v3) bindings directly".
 % JG: "ranking among the fastest tools" needs a reference to a recent benchmark.
 % JG: does not understand "it thus doubles as a reference example for users wishing to embed RIsearch in their own analyses".
-With the development of modern
-%recent powerful 
-software ecosystems, new opportunities have emerged to improve how RIsearch2 and its pipeline were originally distributed and used.
-Here, we introduce new versions of RIsearch2 and the siRNA pipeline, redesigned for improved usability, interoperability with the latest frameworks, and 
-easier
-%seamless
-installation.
+With the recent development of software ecosystems, new opportunities have emerged to improve how RIsearch2 and its pipeline were originally distributed and used.
+Here, we introduce new versions of RIsearch2 and the siRNA pipeline, redesigned for improved usability, interoperability with the latest frameworks, and simple installation.
 RIsearch~(v3) is a faster, memory-safe Rust reimplementation of the core search algorithm, with a redesigned command-line interface and PyO3 Python bindings.
-%RIsearch~(v3) is a memory-safe Rust reimplementation of the core search algorithm that has faster execution times, and has a redesigned command-line interface and PyO3 Python bindings.%
 The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-target pipeline that consumes the RIsearch~(v3) bindings directly (\cref{fig:summary}).
-%The siRNA Off-Target pipeline, siOFF, is a reimplementation of the previous siRNA off-target pipeline, which now consumes the RIsearch~(v3) bindings directly (\cref{fig:summary}).}
-
 % JG, caption title: "Seamless installation and execution of RIsearch and the siOFF pipeline".
 % JG: siOFF "(siRNA Off-Target pipeline)" is a "timely" (not "modern") Python~3 rewrite; "bundles the RIsearch dependencies" (not "wheel").
 % JG: write NCLS in full.
@@ -139,7 +130,7 @@ The siRNA Off-Target pipeline, siOFF, is a rewrite of the previous siRNA off-tar
 % JG: "However, Rust meets all three ..."; "These capabilities are why we built RIsearch in Rust."
 %A limitation of the original RIsearch2 package is its distribution and installation: it is provided as C source code that each user must compile locally.
 %RIsearch~(v3) improves on these aspects while meeting three essential requirements at once:
-In contrast to the original RIsearch2 package, for which its distribution and installation goes via C source code requiring each user to compile locally,
+In comparison to the original RIsearch2 package, for which its distribution and installation goes via C source code requiring each user to compile locally,
 RIsearch~(v3) improves on these aspects by meeting three essential requirements at once:
 \begin{enumerate}
 \item retaining the genome-scale throughput that keeps whole-transcriptome screens practical;
